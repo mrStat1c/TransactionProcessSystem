@@ -1,21 +1,13 @@
-
-
-import java.nio.file.*;
-import java.util.Hashtable;
+import java.io.*;
+import java.util.Properties;
 
 class ClearingSystem {
-    Hashtable<String, String> systemProperties;
 
-    public Path inputPath = Paths.get("C:\\ClrSystemInput");
-    public Path completedPath = Paths.get("C:\\ClrSystemCompleted");
+    public Properties systemProperties;
+    private File systemPropertiesFile = new File("C:\\ClrSystemConfig\\config.ini");
 
-    ClearingSystem() {
-        //собираем проперти из файла
+    ClearingSystem() throws IOException {
+        systemProperties = new Properties();
+        systemProperties.load(new FileInputStream(systemPropertiesFile));
     }
-
-
-    String get(String property) {
-        return systemProperties.get(property);
-    }
-
 }

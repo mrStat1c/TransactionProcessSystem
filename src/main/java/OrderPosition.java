@@ -1,6 +1,3 @@
-/**
- * Created by Static on 30.07.2017.
- */
 public class OrderPosition {
 
     private String product;

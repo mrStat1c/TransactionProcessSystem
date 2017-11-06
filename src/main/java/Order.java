@@ -1,8 +1,5 @@
 import java.util.List;
 
-/**
- * Created by Static on 30.07.2017.
- */
 public class Order {
 
     private String sale_point;

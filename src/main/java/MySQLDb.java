@@ -1,24 +1,26 @@
-
-
-
-import javax.swing.text.Position;
-import java.io.File;
-import java.math.BigInteger;
 import java.sql.*;
+import java.util.Properties;
 import java.util.Random;
 
 public class MySQLDb {
 
     public Connection connection = null;
     private Statement statement = null;
-    private PreparedStatement prepareStatement = null;
-    private ResultSet resultSet = null;
-    private Driver driver = null;
-    //создать Enum со статусами File
+    private Properties properties;
 
-    public MySQLDb() throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException {
-        Class.forName("com.mysql.jdbc.Driver").newInstance();
-        connection = DriverManager.getConnection("jdbc:mysql://localhost/test?user=root&password=root");
+    public MySQLDb(Properties properties){
+        try {
+            this.properties = properties;
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            connection = DriverManager.getConnection(
+                    String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
+                    properties.getProperty("db.server"),
+                    properties.getProperty("db.scheme"),
+                    properties.getProperty("db.user"),
+                    properties.getProperty("db.password")));
+        } catch (Exception e) {
+            System.out.println("Ошибка при подключении к бд:\n" + e.getMessage());
+        }
     }
 
 
