@@ -108,7 +108,7 @@ public class MySQLDb {
         }
         int orderId = Integer.parseInt(sb.toString());
         statement = connection.createStatement();
-        StringBuilder query = new StringBuilder("INSERT INTO test.orders (order_id, sale_point_id, order_date, card_id, file_id)")
+        StringBuilder query = new StringBuilder("INSERT INTO test.orders (order_id, sale_point_id, order_date, card_id, file_id, ccy_id)")
                 .append(" VALUES (")
                 .append(orderId)
                 .append(", ")
@@ -119,6 +119,8 @@ public class MySQLDb {
                 .append(order.getCard() == null ? "null" : getCardId(order.getCard()))
                 .append(", ")
                 .append("'" + getFileId(fileName) + "'")
+                .append(", ")
+                .append("'" + getCurrencyId(order.getCurrency()) + "'")
                 .append(");");
         statement.execute(query.toString());
         for (OrderPosition position: order.getPositions()){
@@ -126,7 +128,15 @@ public class MySQLDb {
         }
     }
 
-        private void createOrderPosition(OrderPosition orderPosition, int orderId) throws SQLException {
+    private int getCurrencyId(String currency) throws SQLException {
+        statement = connection.createStatement();
+        String query = "SELECT id FROM test.currencies WHERE ccy_code = '" + currency + "'";
+        ResultSet resultSet = statement.executeQuery(query);
+        resultSet.next();
+        return resultSet.getInt("id");
+    }
+
+    private void createOrderPosition(OrderPosition orderPosition, int orderId) throws SQLException {
             statement = connection.createStatement();
             StringBuilder query = new StringBuilder("INSERT INTO test.order_positions (order_id, product_id, price, count)")
                     .append(" VALUES (")

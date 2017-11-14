@@ -44,16 +44,23 @@ public class Program {
                         for (int i = 0; i < xmlFile.getOrderCount(); i++) {
                             List<OrderPosition> positions = new ArrayList<OrderPosition>();
                             for (int j = 0; j < xmlFile.getPositionCount(i); j++) {
+                                //TODO придумать нормальный вариант добавления newProductInd в к-р OrderPosition
+                                String newProductInd = "N";
+                                if(xmlFile.positionElementExists(i,j,"newProductInd")){
+                                    newProductInd = "Y";
+                                }
                                 positions.add(new OrderPosition(
                                         xmlFile.getPositionElementValue(i, j, "product"),
                                         xmlFile.getPositionElementValue(i, j, "price"),
-                                        xmlFile.getPositionElementValue(i, j, "count")));
+                                        xmlFile.getPositionElementValue(i, j, "count"),
+                                        xmlFile.getPositionElementValue(i, j, newProductInd)));
                             }
                             Order order = new Order(
                                     xmlFile.getOrderElementValue(i, "sale_point"),
                                     xmlFile.getOrderElementValue(i, "card"),
                                     xmlFile.getOrderElementValue(i, "date"),
-                                    positions);
+                                    positions,
+                                    xmlFile.getOrderElementValue(i, "currency"));
                             db.createOrder(order, file.getName());
                         }
                         db.updateFileStatus(file.getName(), OrderFile.status.ok);

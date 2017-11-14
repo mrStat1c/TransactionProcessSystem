@@ -6,12 +6,14 @@ public class Order {
     private String card;
     private String date;
     private List<OrderPosition> positions;
+    private String currency;
 
-    public Order(String sale_point, String card, String date, List<OrderPosition> positions){
+    public Order(String sale_point, String card, String date, List<OrderPosition> positions, String currency){
         this.sale_point = sale_point;
         this.card = card;
         this.date = date;
         this.positions = positions;
+        this.currency = currency;
     }
 
     public String getSalePoint(){
@@ -29,4 +31,6 @@ public class Order {
     public List<OrderPosition> getPositions(){
         return this.positions;
     }
+
+    public String getCurrency(){return this.currency;}
 }

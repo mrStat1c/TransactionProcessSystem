@@ -52,4 +52,12 @@ public class XMLParser {
         Element element = node.getChildren(field).get(0);
         return element.getValue();
     }
+
+    public boolean positionElementExists(int orderNum, int positionNum, String element){
+        Element node = rootNode.getChildren("order").get(orderNum);
+        List<Element> elements = node.getChildren("positions").get(0).getChildren("position")
+                .get(positionNum).getChildren();
+        return elements.stream()
+                .anyMatch(f -> f.getName().equals(element));
+    }
 }
