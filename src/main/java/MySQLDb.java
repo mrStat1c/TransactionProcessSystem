@@ -70,7 +70,7 @@ public class MySQLDb {
         }
     }
 
-    public void createFile (String fileName, String status) throws SQLException {
+    public void createFile (String fileName, OrderFile.status status) throws SQLException {
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
         for(int i = 0; i < 8; i++){
@@ -89,7 +89,7 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
-    public void updateFileStatus (String fileName, String status) throws SQLException {
+    public void updateFileStatus (String fileName, OrderFile.status status) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("UPDATE test.files")
                 .append(" SET ")

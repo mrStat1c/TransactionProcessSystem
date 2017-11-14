@@ -37,9 +37,9 @@ public class Program {
             for (File file : files) {
                 try {
                     if (db.fileExists(file.getName())) {
-                        db.createFile(file.getName(), "dublicate");
+                        db.createFile(file.getName(), OrderFile.status.dublicate);
                     } else {
-                        db.createFile(file.getName(), "processing");
+                        db.createFile(file.getName(), OrderFile.status.processing);
                         XMLParser xmlFile = new XMLParser(file);
                         for (int i = 0; i < xmlFile.getOrderCount(); i++) {
                             List<OrderPosition> positions = new ArrayList<OrderPosition>();
@@ -56,13 +56,13 @@ public class Program {
                                     positions);
                             db.createOrder(order, file.getName());
                         }
-                        db.updateFileStatus(file.getName(), "ok");
+                        db.updateFileStatus(file.getName(), OrderFile.status.ok);
                         Files.move(inputPath.resolve(file.getName()),
                                 completedPath.resolve(file.getName()));
                     }
                 } catch (JDOMException e) {
                     System.out.println("Ошибка при обработке файла:\n" + e.getMessage());
-                    db.updateFileStatus(file.getName(), "failed");
+                    db.updateFileStatus(file.getName(), OrderFile.status.failed);
                     Files.move(inputPath.resolve(file.getName()),
                             failedPath.resolve(file.getName()));
                 }
