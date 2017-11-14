@@ -16,7 +16,7 @@ public class Program {
     public static void main(String[] args) throws IOException, InterruptedException, JDOMException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         Logger log = Logger.getLogger("main.log");
 
-        ClearingSystem cs = new ClearingSystem();
+        OrderProcessingSystem cs = new OrderProcessingSystem();
         File[] files = null;
         Path inputPath = Paths.get(cs.systemProperties.getProperty("inputPath"));
         Path completedPath = Paths.get(cs.systemProperties.getProperty("completedPath"));

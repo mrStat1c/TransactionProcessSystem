@@ -1,12 +1,12 @@
 import java.io.*;
 import java.util.Properties;
 
-class ClearingSystem {
+class OrderProcessingSystem {
 
     public Properties systemProperties;
     private File systemPropertiesFile = new File("C:\\ClrSystemConfig\\config.ini");
 
-    ClearingSystem() throws IOException {
+    OrderProcessingSystem() throws IOException {
         systemProperties = new Properties();
         systemProperties.load(new FileInputStream(systemPropertiesFile));
     }
