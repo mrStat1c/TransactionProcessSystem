@@ -70,7 +70,7 @@ public class MySQLDb {
         }
     }
 
-    public void createFile (String fileName, OrderFile.status status) throws SQLException {
+    public void createFile (String fileName, OrderFileStatus status) throws SQLException {
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
         for(int i = 0; i < 8; i++){
@@ -89,7 +89,7 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
-    public void updateFileStatus (String fileName, OrderFile.status status) throws SQLException {
+    public void updateFileStatus (String fileName, OrderFileStatus status) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("UPDATE test.files")
                 .append(" SET ")
@@ -130,7 +130,7 @@ public class MySQLDb {
 
     private int getCurrencyId(String currency) throws SQLException {
         statement = connection.createStatement();
-        String query = "SELECT id FROM test.currencies WHERE ccy_code = '" + currency + "'";
+        String query = "SELECT id FROM test.currencies WHERE code = '" + currency + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
         return resultSet.getInt("id");

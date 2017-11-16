@@ -1,6 +1,5 @@
 import org.jdom2.JDOMException;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,14 +20,11 @@ public class Program {
         Path inputPath = Paths.get(cs.systemProperties.getProperty("inputPath"));
         Path completedPath = Paths.get(cs.systemProperties.getProperty("completedPath"));
         Path failedPath = Paths.get(cs.systemProperties.getProperty("failedPath"));
+        Path dublicatePath = Paths.get(cs.systemProperties.getProperty("dublicatePath"));
 
         try {
             files = inputPath.toFile()
-                    .listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".xml");
-                }
-            });
+                    .listFiles((dir, name) -> name.endsWith(".xml"));
         } catch (NullPointerException e) {
             log.info("Нет файлов для загрузки");
         }
@@ -37,12 +33,14 @@ public class Program {
             for (File file : files) {
                 try {
                     if (db.fileExists(file.getName())) {
-                        db.createFile(file.getName(), OrderFile.status.dublicate);
+                        db.createFile(file.getName(), OrderFileStatus.DUBLICATE);
+                        Files.move(inputPath.resolve(file.getName()),
+                                dublicatePath.resolve(file.getName()));
                     } else {
-                        db.createFile(file.getName(), OrderFile.status.processing);
+                        db.createFile(file.getName(), OrderFileStatus.PROCESSING);
                         XMLParser xmlFile = new XMLParser(file);
                         for (int i = 0; i < xmlFile.getOrderCount(); i++) {
-                            List<OrderPosition> positions = new ArrayList<OrderPosition>();
+                            List<OrderPosition> positions = new ArrayList<>();
                             for (int j = 0; j < xmlFile.getPositionCount(i); j++) {
                                 //TODO придумать нормальный вариант добавления newProductInd в к-р OrderPosition
                                 String newProductInd = "N";
@@ -63,13 +61,13 @@ public class Program {
                                     xmlFile.getOrderElementValue(i, "currency"));
                             db.createOrder(order, file.getName());
                         }
-                        db.updateFileStatus(file.getName(), OrderFile.status.ok);
+                        db.updateFileStatus(file.getName(), OrderFileStatus.OK);
                         Files.move(inputPath.resolve(file.getName()),
                                 completedPath.resolve(file.getName()));
                     }
                 } catch (JDOMException e) {
                     System.out.println("Ошибка при обработке файла:\n" + e.getMessage());
-                    db.updateFileStatus(file.getName(), OrderFile.status.failed);
+                    db.updateFileStatus(file.getName(), OrderFileStatus.FAILED);
                     Files.move(inputPath.resolve(file.getName()),
                             failedPath.resolve(file.getName()));
                 }
