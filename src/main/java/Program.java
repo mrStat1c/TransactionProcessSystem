@@ -59,6 +59,7 @@ public class Program {
                                     xmlFile.getOrderElementValue(i, "date"),
                                     positions,
                                     xmlFile.getOrderElementValue(i, "currency"));
+                            new OrderValidator(cs.systemProperties);
                             db.createOrder(order, file.getName());
                         }
                         db.updateFileStatus(file.getName(), OrderFileStatus.OK);
