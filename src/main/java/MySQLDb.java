@@ -1,6 +1,7 @@
 import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 
 public class MySQLDb {
 
@@ -46,6 +47,15 @@ public class MySQLDb {
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
         return resultSet.getInt("id");
+    }
+
+    public String getProductLine(String productName) throws SQLException {
+        statement = connection.createStatement();
+        String query = "SELECT name FROM test.product_lines WHERE id = " +
+                "(SELECT product_line_id FROM test.products WHERE name = '" + productName + "')";
+        ResultSet resultSet = statement.executeQuery(query);
+        resultSet.next();
+        return resultSet.getString("name");
     }
 
     public int getFileId (String fileName) throws SQLException {
@@ -126,6 +136,9 @@ public class MySQLDb {
         for (OrderPosition position: order.getPositions()){
             createOrderPosition(position, orderId);
         }
+        if(!order.getIndicators().isEmpty()){
+            createOrderIndicators(order.getIndicators(), orderId);
+        }
     }
 
     private int getCurrencyId(String currency) throws SQLException {
@@ -149,5 +162,23 @@ public class MySQLDb {
                     .append(orderPosition.getCount())
                     .append(");");
             statement.execute(query.toString());
+        }
+
+        private void createOrderIndicators(Set<OrderIndicator> orderIndicators, int orderId) throws SQLException {
+            statement = connection.createStatement();
+            orderIndicators.forEach(indicator ->
+            {
+                StringBuilder query = new StringBuilder("INSERT INTO test.order_indicators (order_id, indicator)")
+                        .append(" VALUES (")
+                        .append(orderId)
+                        .append(", ")
+                        .append("'" + indicator + "'")
+                        .append(");");
+                try {
+                    statement.execute(query.toString());
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 }

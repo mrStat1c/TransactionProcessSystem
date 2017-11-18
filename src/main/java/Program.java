@@ -21,6 +21,7 @@ public class Program {
         Path completedPath = Paths.get(cs.systemProperties.getProperty("completedPath"));
         Path failedPath = Paths.get(cs.systemProperties.getProperty("failedPath"));
         Path dublicatePath = Paths.get(cs.systemProperties.getProperty("dublicatePath"));
+        IndicatorStamper indicatorStamper;
 
         try {
             files = inputPath.toFile()
@@ -30,6 +31,7 @@ public class Program {
         }
         if (files != null) {
             MySQLDb db = new MySQLDb(cs.systemProperties);
+            indicatorStamper = new IndicatorStamper(cs.systemProperties, db);
             for (File file : files) {
                 try {
                     if (db.fileExists(file.getName())) {
@@ -59,7 +61,7 @@ public class Program {
                                     xmlFile.getOrderElementValue(i, "date"),
                                     positions,
                                     xmlFile.getOrderElementValue(i, "currency"));
-                            new OrderValidator(cs.systemProperties);
+                            order = indicatorStamper.processOrder(order);
                             db.createOrder(order, file.getName());
                         }
                         db.updateFileStatus(file.getName(), OrderFileStatus.OK);

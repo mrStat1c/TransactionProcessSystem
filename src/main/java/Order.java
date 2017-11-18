@@ -1,4 +1,6 @@
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Order {
 
@@ -7,6 +9,7 @@ public class Order {
     private String date;
     private List<OrderPosition> positions;
     private String currency;
+    private Set<OrderIndicator> indicators = new HashSet<>();
 
     public Order(String sale_point, String card, String date, List<OrderPosition> positions, String currency){
         this.sale_point = sale_point;
@@ -33,4 +36,10 @@ public class Order {
     }
 
     public String getCurrency(){return this.currency;}
+
+    public Set<OrderIndicator> getIndicators(){return this.indicators;}
+
+    public void addIndicator(OrderIndicator indicator){
+        this.indicators.add(indicator);
+    }
 }
