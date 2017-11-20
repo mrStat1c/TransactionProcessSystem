@@ -164,7 +164,7 @@ public class MySQLDb {
             statement.execute(query.toString());
         }
 
-        private void createOrderIndicators(Set<OrderIndicator> orderIndicators, int orderId) throws SQLException {
+        private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
             statement = connection.createStatement();
             orderIndicators.forEach(indicator ->
             {

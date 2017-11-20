@@ -1,5 +1,6 @@
 
 public enum OrderIndicator {
     ALCOHOL,
-    LOTTERY
+    LOTTERY,
+    PROD_LINE
 }

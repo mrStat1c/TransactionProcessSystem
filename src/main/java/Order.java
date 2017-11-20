@@ -9,7 +9,7 @@ public class Order {
     private String date;
     private List<OrderPosition> positions;
     private String currency;
-    private Set<OrderIndicator> indicators = new HashSet<>();
+    private Set<String> indicators = new HashSet<>();
 
     public Order(String sale_point, String card, String date, List<OrderPosition> positions, String currency){
         this.sale_point = sale_point;
@@ -37,9 +37,13 @@ public class Order {
 
     public String getCurrency(){return this.currency;}
 
-    public Set<OrderIndicator> getIndicators(){return this.indicators;}
+    public Set<String> getIndicators(){return this.indicators;}
 
     public void addIndicator(OrderIndicator indicator){
-        this.indicators.add(indicator);
+        this.indicators.add(indicator.toString());
+    }
+
+    public void addIndicator(OrderIndicator indicator, String subField){
+        this.indicators.add(indicator + subField);
     }
 }
