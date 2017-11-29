@@ -9,23 +9,23 @@ public class MySQLDb {
     private Statement statement = null;
     private Properties properties;
 
-    public MySQLDb(Properties properties){
+    public MySQLDb(Properties properties) {
         try {
             this.properties = properties;
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             connection = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
-                    properties.getProperty("db.server"),
-                    properties.getProperty("db.scheme"),
-                    properties.getProperty("db.user"),
-                    properties.getProperty("db.password")));
+                            properties.getProperty("db.server"),
+                            properties.getProperty("db.scheme"),
+                            properties.getProperty("db.user"),
+                            properties.getProperty("db.password")));
         } catch (Exception e) {
             System.out.println("Ошибка при подключении к бд:\n" + e.getMessage());
         }
     }
 
 
-    public int getSalePointId (String salePointName) throws SQLException {
+    public int getSalePointId(String salePointName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT id FROM test.sale_points WHERE name = '" + salePointName + "'";
         ResultSet resultSet = statement.executeQuery(query);
@@ -33,7 +33,7 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
-    public int getCardId (String cardName) throws SQLException {
+    public int getCardId(String cardName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT id FROM test.cards WHERE number = '" + cardName + "'";
         ResultSet resultSet = statement.executeQuery(query);
@@ -41,7 +41,7 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
-    public int getProductId (String productName) throws SQLException {
+    public int getProductId(String productName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT id FROM test.products WHERE name = '" + productName + "'";
         ResultSet resultSet = statement.executeQuery(query);
@@ -58,7 +58,7 @@ public class MySQLDb {
         return resultSet.getString("name");
     }
 
-    public int getFileId (String fileName) throws SQLException {
+    public int getFileId(String fileName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT file_id FROM test.files WHERE name = '" + fileName + "'";
         ResultSet resultSet = statement.executeQuery(query);
@@ -67,7 +67,7 @@ public class MySQLDb {
     }
 
 
-    public boolean fileExists (String fileName) throws SQLException {
+    public boolean fileExists(String fileName) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as x from test.files WHERE ")
                 .append("name = '" + fileName + "';");
@@ -80,10 +80,10 @@ public class MySQLDb {
         }
     }
 
-    public void createFile (String fileName, OrderFileStatus status) throws SQLException {
+    public void createFile(String fileName, OrderFileStatus status) throws SQLException {
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
-        for(int i = 0; i < 8; i++){
+        for (int i = 0; i < 8; i++) {
             sb.append(generator.nextInt(10));
         }
         int fileId = Integer.parseInt(sb.toString());
@@ -99,7 +99,7 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
-    public void updateFileStatus (String fileName, OrderFileStatus status) throws SQLException {
+    public void updateFileStatus(String fileName, OrderFileStatus status) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("UPDATE test.files")
                 .append(" SET ")
@@ -110,10 +110,10 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
-    public void createOrder (Order order, String fileName) throws SQLException {
+    public void createOrder(Order order, String fileName) throws SQLException {
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
-        for(int i = 0; i < 8; i++){
+        for (int i = 0; i < 8; i++) {
             sb.append(generator.nextInt(10));
         }
         int orderId = Integer.parseInt(sb.toString());
@@ -133,10 +133,10 @@ public class MySQLDb {
                 .append("'" + getCurrencyId(order.getCurrency()) + "'")
                 .append(");");
         statement.execute(query.toString());
-        for (OrderPosition position: order.getPositions()){
-            createOrderPosition(position, orderId);
+        for (OrderPosition position : order.getPositions()) {
+            createOrderPosition(position, orderId, order.getCurrency(), order.getDate());
         }
-        if(!order.getIndicators().isEmpty()){
+        if (!order.getIndicators().isEmpty()) {
             createOrderIndicators(order.getIndicators(), orderId);
         }
     }
@@ -149,36 +149,53 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
-    private void createOrderPosition(OrderPosition orderPosition, int orderId) throws SQLException {
-            statement = connection.createStatement();
-            StringBuilder query = new StringBuilder("INSERT INTO test.order_positions (order_id, product_id, price, count)")
+    private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate) throws SQLException {
+        statement = connection.createStatement();
+        Double settlPrice = getCurrencyCourse(currencyCode, orderDate) * Double.parseDouble(orderPosition.getPrice());
+        StringBuilder query = new StringBuilder(
+                "INSERT INTO test.order_positions (order_id, product_id, orig_price, settl_price, count)")
+                .append(" VALUES (")
+                .append(orderId)
+                .append(", ")
+                .append(getProductId(orderPosition.getProduct()))
+                .append(", ")
+                .append(settlPrice)
+                .append(", ")
+                .append(orderPosition.getCount())
+                .append(");");
+        statement.execute(query.toString());
+    }
+
+    public Double getCurrencyCourse(String currencyCode, String courseDate) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT course FROM test.currency_courses")
+                .append(" WHERE ccy_id = '")
+                .append(getCurrencyId(currencyCode))
+                .append("'")
+                .append(" AND date = '")
+                .append(courseDate)
+                .append("';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getDouble("cource");
+    }
+
+    private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
+        statement = connection.createStatement();
+        orderIndicators.forEach(indicator ->
+        {
+            StringBuilder query = new StringBuilder("INSERT INTO test.order_indicators (order_id, indicator)")
                     .append(" VALUES (")
                     .append(orderId)
                     .append(", ")
-                    .append(getProductId(orderPosition.getProduct()))
-                    .append(", ")
-                    .append(orderPosition.getPrice())
-                    .append(", ")
-                    .append(orderPosition.getCount())
+                    .append("'" + indicator + "'")
                     .append(");");
-            statement.execute(query.toString());
-        }
+            try {
+                statement.execute(query.toString());
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
-        private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
-            statement = connection.createStatement();
-            orderIndicators.forEach(indicator ->
-            {
-                StringBuilder query = new StringBuilder("INSERT INTO test.order_indicators (order_id, indicator)")
-                        .append(" VALUES (")
-                        .append(orderId)
-                        .append(", ")
-                        .append("'" + indicator + "'")
-                        .append(");");
-                try {
-                    statement.execute(query.toString());
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
 }

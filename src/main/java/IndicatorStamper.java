@@ -24,6 +24,7 @@ public class IndicatorStamper {
     }
 
     public Order processOrder(Order order) throws SQLException {
+        Double currencyCourse = db.getCurrencyCourse(order.getCurrency(), order.getDate());
         if (alcoholInd) {
             for (OrderPosition position : order.getPositions()) {
                 if (db.getProductLine(position.getProduct()).equals("ALCOHOL")) {
@@ -35,8 +36,8 @@ public class IndicatorStamper {
         if (lotteryInd){
             double orderSum = 0;
             for (OrderPosition position : order.getPositions()) {
-                orderSum += Double.parseDouble(position.getPrice()) *
-                        Double.parseDouble(position.getCount());
+                orderSum += Double.parseDouble(position.getPrice()) * currencyCourse
+                        * Double.parseDouble(position.getCount());
             }
             if (orderSum >= lotteryMinSum){
                 order.addIndicator(OrderIndicator.LOTTERY);
@@ -48,7 +49,8 @@ public class IndicatorStamper {
             Map<String, Double> prodLineGroups = new HashMap<>();
             for (OrderPosition position: order.getPositions()){
                 prodLine = db.getProductLine(position.getProduct());
-                positionSum = Double.parseDouble(position.getPrice()) * Double.parseDouble(position.getCount());
+                positionSum = Double.parseDouble(position.getPrice()) * currencyCourse
+                * Double.parseDouble(position.getCount());
                 prodLineGroups.put(prodLine, prodLineGroups.getOrDefault(prodLine, 0.0) + positionSum);
             }
             prodLineGroups.entrySet().stream()
