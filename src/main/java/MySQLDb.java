@@ -118,7 +118,15 @@ public class MySQLDb {
         }
         int orderId = Integer.parseInt(sb.toString());
         statement = connection.createStatement();
-        StringBuilder query = new StringBuilder("INSERT INTO test.orders (order_id, sale_point_id, order_date, card_id, file_id, ccy_id)")
+        for (OrderPosition position : order.getPositions()) {
+            createOrderPosition(position, orderId, order.getCurrency(), order.getDate());
+        }
+        sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_id ='")
+                .append(orderId).append("';");
+        ResultSet resultSet = statement.executeQuery(sb.toString());
+        resultSet.next();
+        double orderSum = resultSet.getDouble("order_sum");
+        StringBuilder query = new StringBuilder("INSERT INTO test.orders (order_id, sale_point_id, order_date, card_id, file_id, ccy_id, sum)")
                 .append(" VALUES (")
                 .append(orderId)
                 .append(", ")
@@ -131,11 +139,10 @@ public class MySQLDb {
                 .append("'" + getFileId(fileName) + "'")
                 .append(", ")
                 .append("'" + getCurrencyId(order.getCurrency()) + "'")
+                .append(", ")
+                .append("'" + orderSum + "'")
                 .append(");");
         statement.execute(query.toString());
-        for (OrderPosition position : order.getPositions()) {
-            createOrderPosition(position, orderId, order.getCurrency(), order.getDate());
-        }
         if (!order.getIndicators().isEmpty()) {
             createOrderIndicators(order.getIndicators(), orderId);
         }
@@ -159,6 +166,8 @@ public class MySQLDb {
                 .append(", ")
                 .append(getProductId(orderPosition.getProduct()))
                 .append(", ")
+                .append(orderPosition.getPrice())
+                .append(", ")
                 .append(settlPrice)
                 .append(", ")
                 .append(orderPosition.getCount())
@@ -173,11 +182,12 @@ public class MySQLDb {
                 .append(getCurrencyId(currencyCode))
                 .append("'")
                 .append(" AND date = '")
-                .append(courseDate)
+                //TODO сделать нормальную конвертацию даты
+                .append(courseDate.substring(0, 10))
                 .append("';");
         ResultSet resultSet = statement.executeQuery(query.toString());
         resultSet.next();
-        return resultSet.getDouble("cource");
+        return resultSet.getDouble("course");
     }
 
     private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {

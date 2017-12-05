@@ -36,8 +36,8 @@ public class Program {
                 try {
                     if (db.fileExists(file.getName())) {
                         db.createFile(file.getName(), OrderFileStatus.DUBLICATE);
-                        Files.move(inputPath.resolve(file.getName()),
-                                dublicatePath.resolve(file.getName()));
+              //          Files.move(inputPath.resolve(file.getName()),
+              //                  dublicatePath.resolve(file.getName()));
                     } else {
                         db.createFile(file.getName(), OrderFileStatus.PROCESSING);
                         XMLParser xmlFile = new XMLParser(file);
@@ -65,14 +65,14 @@ public class Program {
                             db.createOrder(order, file.getName());
                         }
                         db.updateFileStatus(file.getName(), OrderFileStatus.OK);
-                        Files.move(inputPath.resolve(file.getName()),
-                                completedPath.resolve(file.getName()));
+              //          Files.move(inputPath.resolve(file.getName()),
+               //                 completedPath.resolve(file.getName()));
                     }
                 } catch (JDOMException e) {
                     System.out.println("Ошибка при обработке файла:\n" + e.getMessage());
                     db.updateFileStatus(file.getName(), OrderFileStatus.FAILED);
-                    Files.move(inputPath.resolve(file.getName()),
-                            failedPath.resolve(file.getName()));
+               //     Files.move(inputPath.resolve(file.getName()),
+               //             failedPath.resolve(file.getName()));
                 }
             }
         }
