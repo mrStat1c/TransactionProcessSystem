@@ -3,5 +3,6 @@ public enum OrderFileStatus {
     PROCESSING,
     OK,
     DUBLICATE,
-    FAILED
+    FAILED,
+    REJECTED
 }

@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -207,5 +208,20 @@ public class MySQLDb {
             }
         });
     }
+
+    public void createRejectForFile(String fileName, int rejectCode) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("INSERT INTO test.rejects (file_name, order_number, order_position_number, ")
+                .append("type, code)")
+                .append(" VALUES (")
+                .append("'" + fileName + "'")
+                .append(", null, null, ")
+                .append("'FILE'")
+                .append(", ")
+                .append(rejectCode)
+                .append(");");
+        statement.execute(query.toString());
+    }
+
 
 }
