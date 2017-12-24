@@ -1,7 +1,13 @@
+import com.sun.xml.internal.bind.v2.TODO;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.spec.ECField;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Optional;
 
 class OrderFileValidator {
@@ -28,8 +34,27 @@ class OrderFileValidator {
         }
     }
 
-    static void validateOrder(Order order) {
+    static boolean validateOrder(String fileName, Order order) throws SQLException {
+        return validateOrderDate(fileName, order)
+                & validateLastPresentment(fileName, order);
+    }
 
+    private static boolean validateOrderDate(String fileName, Order order) throws SQLException {
+        GregorianCalendar calendar = new GregorianCalendar();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setLenient(false);
+            try {
+                calendar.setTime(dateFormat.parse(order.getDate()));
+            } catch (ParseException e) {
+                db.createRejectForOrder(fileName, order.getOrderNum(), 200, order.getDate());
+                return false;
+        }
+        return true;
+    }
+
+    private static boolean validateLastPresentment(String fileName, Order order){
+        //TODO заготовка
+        return true;
     }
 
     static void validateOrderPosition(OrderPosition orderPosition) {

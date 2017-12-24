@@ -111,25 +111,24 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
-    public void createOrder(Order order, String fileName) throws SQLException {
-        StringBuilder sb = new StringBuilder("");
-        Random generator = new Random();
-        for (int i = 0; i < 8; i++) {
-            sb.append(generator.nextInt(10));
-        }
-        int orderId = Integer.parseInt(sb.toString());
+    public void createOrder(Order order, String fileName, char rejected) throws SQLException {
+        StringBuilder sb;
+        int orderNumber = order.getOrderNum();
+        double orderSum = 0.0;
         statement = connection.createStatement();
-        for (OrderPosition position : order.getPositions()) {
-            createOrderPosition(position, orderId, order.getCurrency(), order.getDate());
+        if (String.valueOf(rejected).equals("N")){
+            for (OrderPosition position : order.getPositions()) {
+                createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'N');
+            }
+            sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_number ='")
+                    .append(orderNumber).append("';");
+            ResultSet resultSet = statement.executeQuery(sb.toString());
+            resultSet.next();
+            orderSum = resultSet.getDouble("order_sum");
         }
-        sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_id ='")
-                .append(orderId).append("';");
-        ResultSet resultSet = statement.executeQuery(sb.toString());
-        resultSet.next();
-        double orderSum = resultSet.getDouble("order_sum");
-        StringBuilder query = new StringBuilder("INSERT INTO test.orders (order_id, sale_point_id, order_date, card_id, file_id, ccy_id, sum)")
+        StringBuilder query = new StringBuilder("INSERT INTO test.orders (number, sale_point_id, order_date, card_id, file_id, ccy_id, sum, rejected)")
                 .append(" VALUES (")
-                .append(orderId)
+                .append(orderNumber)
                 .append(", ")
                 .append("'" + getSalePointId(order.getSalePoint()) + "'")
                 .append(", ")
@@ -142,10 +141,12 @@ public class MySQLDb {
                 .append("'" + getCurrencyId(order.getCurrency()) + "'")
                 .append(", ")
                 .append("'" + orderSum + "'")
+                .append(", ")
+                .append("'" + rejected + "'")
                 .append(");");
         statement.execute(query.toString());
         if (!order.getIndicators().isEmpty()) {
-            createOrderIndicators(order.getIndicators(), orderId);
+            createOrderIndicators(order.getIndicators(), orderNumber);
         }
     }
 
@@ -157,11 +158,11 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
-    private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate) throws SQLException {
+    private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate, char rejected) throws SQLException {
         statement = connection.createStatement();
         Double settlPrice = getCurrencyCourse(currencyCode, orderDate) * Double.parseDouble(orderPosition.getPrice());
         StringBuilder query = new StringBuilder(
-                "INSERT INTO test.order_positions (order_id, product_id, orig_price, settl_price, count)")
+                "INSERT INTO test.order_positions (order_number, product_id, orig_price, settl_price, count, rejected)")
                 .append(" VALUES (")
                 .append(orderId)
                 .append(", ")
@@ -172,6 +173,8 @@ public class MySQLDb {
                 .append(settlPrice)
                 .append(", ")
                 .append(orderPosition.getCount())
+                .append(", ")
+                .append("'" + rejected + "'")
                 .append(");");
         statement.execute(query.toString());
     }
@@ -216,9 +219,26 @@ public class MySQLDb {
                 .append(" VALUES (")
                 .append("'" + fileName + "'")
                 .append(", null, null, ")
-                .append("'FILE'")
+                .append("'" + RejectType.FILE + "'")
                 .append(", ")
                 .append(rejectCode)
+                .append(");");
+        statement.execute(query.toString());
+    }
+
+    public void createRejectForOrder(String fileName, int orderNumber, int rejectCode, String fieldValue) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("INSERT INTO test.rejects (file_name, order_number, order_position_number, ")
+                .append("type, code, incorrect_field_value)")
+                .append(" VALUES (")
+                .append("'" + fileName + "'")
+                .append(", " + orderNumber)
+                .append(", null, ")
+                .append("'" + RejectType.ORDER + "'")
+                .append(", ")
+                .append(rejectCode)
+                .append(", ")
+                .append("'" + fieldValue + "'")
                 .append(");");
         statement.execute(query.toString());
     }

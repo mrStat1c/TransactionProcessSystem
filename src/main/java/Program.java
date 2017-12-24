@@ -77,8 +77,12 @@ public class Program {
                                 xmlFile.getOrderElementValue(i, "date"),
                                 positions,
                                 xmlFile.getOrderElementValue(i, "currency"));
-                        order = indicatorStamper.processOrder(order);
-                        db.createOrder(order, file.getName());
+                        if (OrderFileValidator.validateOrder(file.getName(), order)) {
+                            order = indicatorStamper.processOrder(order);
+                            db.createOrder(order, file.getName(), 'N');
+                        } else {
+                            db.createOrder(order, file.getName(), 'Y');
+                        }
                     }
                     db.updateFileStatus(file.getName(), OrderFileStatus.OK);
                     //          Files.move(inputPath.resolve(file.getName()),
