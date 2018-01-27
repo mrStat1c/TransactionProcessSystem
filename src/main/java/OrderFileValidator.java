@@ -136,6 +136,7 @@ class OrderFileValidator {
         orderFields.put("date", order.getDate());
         orderFields.put("orderNum", String.valueOf(order.getOrderNum()));
         orderFields.put("salePoint", order.getSalePoint());
+        orderFields.put("salePointOrderNum", order.getSalePointOrderNum());
         for(Map.Entry field: orderFields.entrySet()){
             if (field.getValue().equals("")){
                 db.createRejectForOrder(fileName, order.getOrderNum(), 240, field.getKey() + " is absent");
