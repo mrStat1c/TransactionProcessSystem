@@ -47,16 +47,27 @@ public class XMLParser {
         return "";
     }
 
-    public String getOrderElementValue(int orderNum, String field){
+    public String getOrderElementValue(int orderNum, String field) {
         Element node = rootNode.getChildren("order").get(orderNum);
-        Element element = node.getChildren(field).get(0);
-        return element.getValue();
+        try {
+            Element element = node.getChildren(field).get(0);
+            return element.getValue();
+        } catch (IndexOutOfBoundsException e) {
+            return "";
+        }
     }
 
     public boolean positionElementExists(int orderNum, int positionNum, String element){
         Element node = rootNode.getChildren("order").get(orderNum);
         List<Element> elements = node.getChildren("positions").get(0).getChildren("position")
                 .get(positionNum).getChildren();
+        return elements.stream()
+                .anyMatch(f -> f.getName().equals(element));
+    }
+
+    public boolean orderElementExists(int orderNum, String element){
+        Element node = rootNode.getChildren("order").get(orderNum);
+        List<Element> elements = node.getChildren();
         return elements.stream()
                 .anyMatch(f -> f.getName().equals(element));
     }

@@ -1,8 +1,9 @@
 import java.sql.*;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Date;
 
 public class MySQLDb {
 
@@ -31,7 +32,12 @@ public class MySQLDb {
         String query = "SELECT id FROM test.sale_points WHERE name = '" + salePointName + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
-        return resultSet.getInt("id");
+        try {
+            return resultSet.getInt("id");
+        } catch (SQLException e){
+            //TODO придумать нормальную реализацию
+            return 0;
+        }
     }
 
     public int getCardId(String cardName) throws SQLException {
@@ -39,7 +45,12 @@ public class MySQLDb {
         String query = "SELECT id FROM test.cards WHERE number = '" + cardName + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
-        return resultSet.getInt("id");
+        try {
+            return resultSet.getInt("id");
+        } catch (SQLException e){
+            //TODO придумать нормальные реализации (тег card отсутствует и карта не найдена)
+            return 0;
+        }
     }
 
     public int getProductId(String productName) throws SQLException {
@@ -126,7 +137,8 @@ public class MySQLDb {
             resultSet.next();
             orderSum = resultSet.getDouble("order_sum");
         }
-        StringBuilder query = new StringBuilder("INSERT INTO test.orders (number, sale_point_id, order_date, card_id, file_id, ccy_id, sum, rejected)")
+        StringBuilder query = new StringBuilder("INSERT INTO test.orders (number, sale_point_id, order_date, card_id, " +
+                "file_id, ccy_id, sum, rejected, sale_point_order_num)")
                 .append(" VALUES (")
                 .append(orderNumber)
                 .append(", ")
@@ -134,7 +146,7 @@ public class MySQLDb {
                 .append(", ")
                 .append("DATE_FORMAT('" + order.getDate() + "', '%Y-%m-%d %H:%i:%s')")
                 .append(", ")
-                .append(order.getCard() == null ? "null" : getCardId(order.getCard()))
+                .append(getCardId(order.getCard()))
                 .append(", ")
                 .append("'" + getFileId(fileName) + "'")
                 .append(", ")
@@ -143,10 +155,35 @@ public class MySQLDb {
                 .append("'" + orderSum + "'")
                 .append(", ")
                 .append("'" + rejected + "'")
+                .append(", ")
+                .append("'" + order.getSalePointOrderNum() + "'")
                 .append(");");
         statement.execute(query.toString());
         if (!order.getIndicators().isEmpty()) {
             createOrderIndicators(order.getIndicators(), orderNumber);
+        }
+    }
+
+
+    boolean orderExists(Order order) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) count FROM test.orders")
+                .append(" WHERE order_date = '")
+                .append(order.getDate())
+                .append("'")
+                .append(" AND sale_point_id = '")
+                .append(getSalePointId(order.getSalePoint()))
+                .append("'")
+                .append(" AND sale_point_order_num = '")
+                .append(order.getSalePointOrderNum())
+                .append("'")
+                .append("';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        if (resultSet.getInt("count") > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -155,7 +192,12 @@ public class MySQLDb {
         String query = "SELECT id FROM test.currencies WHERE code = '" + currency + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
-        return resultSet.getInt("id");
+        try {
+            return resultSet.getInt("id");
+        } catch (SQLException e){
+            //TODO придумать нормальную реализацию
+            return 0;
+        }
     }
 
     private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate, char rejected) throws SQLException {
@@ -178,6 +220,7 @@ public class MySQLDb {
                 .append(");");
         statement.execute(query.toString());
     }
+
 
     public Double getCurrencyCourse(String currencyCode, String courseDate) throws SQLException {
         statement = connection.createStatement();
@@ -243,5 +286,91 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    public boolean lateDispatchAgreement(Order order) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
+                .append(" WHERE type = 'LateDispatch'")
+                .append(" AND sale_point_id =")
+                .append(" (SELECT id FROM test.sale_points WHERE name = ")
+                .append("'" + order.getSalePoint() + "');");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
 
+    public boolean foreignCurrencyAgreement(Order order) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
+                .append(" WHERE type = 'ForeignCurrency'")
+                .append(" AND sale_point_id =")
+                .append(" (SELECT id FROM test.sale_points WHERE name = ")
+                .append("'" + order.getSalePoint() + "');");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
+
+    public boolean salePointExists(String salePoint) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_points")
+                .append(" WHERE name = ")
+                .append("'" + salePoint + "';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
+
+    public boolean cardExists(String cardNumber) throws SQLException {
+        //проверяет только, если тег card существует и заполнен
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.cards")
+                .append(" WHERE number = ")
+                .append("'" + cardNumber + "';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
+
+    public boolean currencyExists(String currencyCode) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.currencies")
+                .append(" WHERE code = ")
+                .append("'" + currencyCode + "';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
+
+
+    public String getCardStatusForOrderDate(String cardNumber, String orderDate) throws SQLException, ParseException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT ch.begin_date date, cs.status status from test.cards c")
+                .append(" JOIN card_status_history ch on ch.card_id = c.id")
+                .append(" JOIN card_statuses cs on cs.id = ch.status_id")
+                .append(" WHERE c.number = ")
+                .append("'" + cardNumber + "'")
+                .append(" ORDER BY date;");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        Hashtable<String, String> cardStatuses = new Hashtable<>();
+        List<String> dates = new ArrayList<>();
+        while (resultSet.next()){
+            cardStatuses.put(resultSet.getString("date"), resultSet.getString("status"));
+            dates.add(resultSet.getString("date"));
+        }
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+        Long orderDateLong = format.parse(orderDate).getTime();
+        if(format.parse(dates.get(0)).getTime() > orderDateLong){
+            return "undefinite";
+        }
+        if(orderDateLong >= format.parse(dates.get(dates.size() - 1)).getTime()){
+            return cardStatuses.get(dates.get(dates.size() - 1));
+        }
+        for(int i = 0; i < dates.size() - 1; i++){
+            if(format.parse(dates.get(i)).getTime() <= orderDateLong
+                    && orderDateLong < format.parse(dates.get(i + 1)).getTime()){
+                return cardStatuses.get(dates.get(i));
+            }
+        }
+        return "undefinite";
+    }
 }

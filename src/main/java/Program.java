@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 
 public class Program {
 
-    public static void main(String[] args) throws IOException, InterruptedException, JDOMException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public static void main(String[] args) throws IOException, InterruptedException, JDOMException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
         Logger log = Logger.getLogger("main.log");
 
         OrderProcessingSystem cs = new OrderProcessingSystem();
@@ -73,15 +74,19 @@ public class Program {
                         }
                         Order order = new Order(
                                 xmlFile.getOrderElementValue(i, "sale_point"),
+//                                xmlFile.orderElementExists(i, "card") ?
+//                                        xmlFile.getOrderElementValue(i, "card") : "",
                                 xmlFile.getOrderElementValue(i, "card"),
                                 xmlFile.getOrderElementValue(i, "date"),
                                 positions,
-                                xmlFile.getOrderElementValue(i, "currency"));
+                                xmlFile.getOrderElementValue(i, "currency"),
+                                xmlFile.getOrderElementValue(i, "sale_point_order_num"));
                         if (OrderFileValidator.validateOrder(file.getName(), order)) {
                             order = indicatorStamper.processOrder(order);
                             db.createOrder(order, file.getName(), 'N');
                         } else {
                             db.createOrder(order, file.getName(), 'Y');
+                            //Если реджект по sale_point, записать null
                         }
                     }
                     db.updateFileStatus(file.getName(), OrderFileStatus.OK);

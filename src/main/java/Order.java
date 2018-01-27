@@ -5,20 +5,22 @@ import java.util.Set;
 
 public class Order {
 
-    private String sale_point;
+    private String salePoint;
     private String card;
     private String date;
     private List<OrderPosition> positions;
     private String currency;
+    private String salePointOrderNum;
     private Set<String> indicators = new HashSet<>();
     private int orderNum;
 
-    public Order(String sale_point, String card, String date, List<OrderPosition> positions, String currency){
-        this.sale_point = sale_point;
+    public Order(String sale_point, String card, String date, List<OrderPosition> positions, String currency, String salePointOrderNum){
+        this.salePoint = sale_point;
         this.card = card;
         this.date = date;
         this.positions = positions;
         this.currency = currency;
+        this.salePointOrderNum = salePointOrderNum;
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
         for (int i = 0; i < 8; i++) {
@@ -28,7 +30,7 @@ public class Order {
     }
 
     public String getSalePoint(){
-        return this.sale_point;
+        return this.salePoint;
     }
 
     public String getCard(){
@@ -57,5 +59,9 @@ public class Order {
 
     public int getOrderNum() {
         return this.orderNum;
+    }
+
+    public String getSalePointOrderNum() {
+        return salePointOrderNum;
     }
 }

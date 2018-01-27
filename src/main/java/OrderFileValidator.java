@@ -1,14 +1,11 @@
-import com.sun.xml.internal.bind.v2.TODO;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.spec.ECField;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Optional;
+import java.util.*;
 
 class OrderFileValidator {
 
@@ -34,31 +31,136 @@ class OrderFileValidator {
         }
     }
 
-    static boolean validateOrder(String fileName, Order order) throws SQLException {
-        return validateOrderDate(fileName, order)
-                & validateLastPresentment(fileName, order);
+    static boolean validateOrder(String fileName, Order order) throws SQLException, ParseException {
+        if (!validateFieldExisting(fileName, order) && !validateOrderForDublication(fileName, order)){
+            return false;
+        }
+        boolean orderDateIsCorrect = validateOrderDate(fileName, order);
+        boolean cardNumberIsCorrect = false;//карта существует и она корректна
+        boolean salePointIsCorrect = validateSalePoint(fileName, order);
+        //вроде дальше не верно, т.к. сначала нужно проверять корректность salePoint, а потом уже LateDispatch
+        boolean result = (orderDateIsCorrect && validateLateDispatch(fileName, order)) & salePointIsCorrect;
+        if (!order.getCard().isEmpty()) {
+            cardNumberIsCorrect = validateCard(fileName, order);
+            result &= cardNumberIsCorrect;
+        }
+        if (orderDateIsCorrect && cardNumberIsCorrect){
+            result &= validateCardStatus(fileName, order);
+        }
+        result &= (validateCurrency(fileName, order) && salePointIsCorrect && validateForeignCurrency(fileName, order));
+        return result;
     }
 
     private static boolean validateOrderDate(String fileName, Order order) throws SQLException {
         GregorianCalendar calendar = new GregorianCalendar();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setLenient(false);
-            try {
-                calendar.setTime(dateFormat.parse(order.getDate()));
-            } catch (ParseException e) {
-                db.createRejectForOrder(fileName, order.getOrderNum(), 200, order.getDate());
-                return false;
+        try {
+            calendar.setTime(dateFormat.parse(order.getDate()));
+        } catch (ParseException e) {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 200, order.getDate());
+            return false;
         }
         return true;
     }
 
-    private static boolean validateLastPresentment(String fileName, Order order){
-        //TODO заготовка
+    private static boolean validateLateDispatch(String fileName, Order order) throws ParseException, SQLException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date orderDate = dateFormat.parse(order.getDate());
+        double daysPassed = (new Date().getTime() - orderDate.getTime()) /
+                (double) (1000 * 60 * 60 * 24); //86400000 секунд в одном дне
+        if (daysPassed <= 3 || (db.lateDispatchAgreement(order) && daysPassed <= 7)) {
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 201, order.getDate());
+            return false;
+        }
+    }
+
+    private static boolean validateSalePoint(String fileName, Order order) throws SQLException {
+        if (db.salePointExists(order.getSalePoint())) {
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 210, order.getSalePoint());
+            return false;
+        }
+    }
+
+    private static boolean validateCard(String fileName, Order order) throws SQLException {
+        if (db.cardExists(order.getCard())) {
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 220, order.getCard());
+            return false;
+        }
+    }
+
+    private static boolean validateCardStatus(String fileName, Order order) throws SQLException, ParseException {
+        String cardStatus = db.getCardStatusForOrderDate(order.getCard(), order.getDate());
+        if (cardStatus.equals("Active")) {
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 221, cardStatus);
+            return false;
+        }
+    }
+
+    private static boolean validateCurrency(String fileName, Order order) throws SQLException {
+        if (db.currencyExists(order.getCurrency())){
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, order.getOrderNum(), 230, order.getCurrency());
+            return false;
+        }
+    }
+
+
+    private static boolean validateForeignCurrency(String fileName, Order order) throws SQLException {
+        if (!order.getCurrency().equals("RUB")) {
+            if (db.foreignCurrencyAgreement(order)) {
+                return true;
+            } else {
+                db.createRejectForOrder(fileName, order.getOrderNum(), 231, order.getCurrency());
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    private static boolean validateFieldExisting(String fileName, Order order) throws SQLException {
+        //TODO сделать через рефлексию
+        //Field[] orderFields = order.getClass().getDeclaredFields();
+        Map<String, String> orderFields = new HashMap<>();
+        orderFields.put("currency", order.getCurrency());
+        orderFields.put("date", order.getDate());
+        orderFields.put("orderNum", String.valueOf(order.getOrderNum()));
+        orderFields.put("salePoint", order.getSalePoint());
+        for(Map.Entry field: orderFields.entrySet()){
+            if (field.getValue().equals("")){
+                db.createRejectForOrder(fileName, order.getOrderNum(), 240, field.getKey() + " is absent");
+                return false;
+            }
+        }
+        if(order.getPositions().isEmpty()){
+            db.createRejectForOrder(fileName, order.getOrderNum(), 240, "orderPositions are absent");
+            return false;
+        }
         return true;
+    }
+
+    private static boolean validateOrderForDublication(String fileName, Order order) throws SQLException {
+        if(db.orderExists(order)){
+            db.createRejectForOrder(fileName, order.getOrderNum(), 250, "dublicate");
+            return false;
+        } else {
+            return true;
+        }
     }
 
     static void validateOrderPosition(OrderPosition orderPosition) {
 
     }
+
 
 }
