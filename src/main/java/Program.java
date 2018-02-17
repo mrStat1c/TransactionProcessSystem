@@ -62,15 +62,15 @@ public class Program {
                         List<OrderPosition> positions = new ArrayList<>();
                         for (int j = 0; j < xmlFile.getPositionCount(i); j++) {
                             //TODO придумать нормальный вариант добавления newProductInd в к-р OrderPosition
-                            String newProductInd = "N";
+                            boolean newProductInd = false;
                             if (xmlFile.positionElementExists(i, j, "newProductInd")) {
-                                newProductInd = "Y";
+                                newProductInd = true;
                             }
                             positions.add(new OrderPosition(
                                     xmlFile.getPositionElementValue(i, j, "product"),
                                     xmlFile.getPositionElementValue(i, j, "price"),
                                     xmlFile.getPositionElementValue(i, j, "count"),
-                                    xmlFile.getPositionElementValue(i, j, newProductInd)));
+                                    newProductInd));
                         }
                         Order order = new Order(
                                 xmlFile.getOrderElementValue(i, "sale_point"),

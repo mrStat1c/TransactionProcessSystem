@@ -127,9 +127,13 @@ public class MySQLDb {
         int orderNumber = order.getOrderNum();
         double orderSum = 0.0;
         statement = connection.createStatement();
-        if (String.valueOf(rejected).equals("N")){
+        if (String.valueOf(rejected).equals("N")) {
             for (OrderPosition position : order.getPositions()) {
-                createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'N');
+                if (OrderFileValidator.validateOrderPosition(fileName, order.getOrderNum(), order.getSalePoint(), position)) {
+                    createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'N');
+                } else {
+                    //создать orderPosition с реджектом
+                }
             }
             sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_number ='")
                     .append(orderNumber).append("';");
@@ -310,6 +314,18 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    public boolean newProductAgreement(String salePoint) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
+                .append(" WHERE type = 'NewProduct'")
+                .append(" AND sale_point_id =")
+                .append(" (SELECT id FROM test.sale_points WHERE name = ")
+                .append("'" + salePoint + "');");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
+
     public boolean salePointExists(String salePoint) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_points")
@@ -341,6 +357,15 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    public boolean productExists(String productName) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("SELECT count(*) as count from test.products")
+                .append(" WHERE name = ")
+                .append("'" + productName + "';");
+        ResultSet resultSet = statement.executeQuery(query.toString());
+        resultSet.next();
+        return resultSet.getInt("count") > 0;
+    }
 
     public String getCardStatusForOrderDate(String cardNumber, String orderDate) throws SQLException, ParseException {
         statement = connection.createStatement();

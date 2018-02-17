@@ -159,9 +159,54 @@ class OrderFileValidator {
         }
     }
 
-    static void validateOrderPosition(OrderPosition orderPosition) {
-
+    static boolean validateOrderPosition(String fileName, int orderNum, String orderSalePoint, OrderPosition orderPosition) throws SQLException {
+        boolean result = true;
+        if (!orderPosition.getNewProductInd() || !db.newProductAgreement(orderSalePoint)){
+                result = validateProduct(fileName, orderNum, orderPosition);
+            }
+        return result
+                & validateProductCount(fileName, orderNum, orderPosition)
+                & validateProductPrice(fileName, orderNum, orderPosition);
     }
 
+    private static boolean validateProduct(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
+        if (db.productExists(orderPosition.getProduct())){
+            return true;
+        } else {
+            db.createRejectForOrder(fileName, orderNum, 300, orderPosition.getProduct());
+            return false;
+        }
+    }
+
+    private static boolean validateProductCount(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
+        try {
+            if (Integer.parseInt(orderPosition.getCount()) > 0
+                    && orderPosition.getCount().length() <= 3) {
+                return true;
+            } else {
+                db.createRejectForOrder(fileName, orderNum, 310, orderPosition.getCount());
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            db.createRejectForOrder(fileName, orderNum, 310, orderPosition.getCount());
+            return false;
+        }
+    }
+
+    private static boolean validateProductPrice(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
+        try {
+            if (Double.parseDouble(orderPosition.getCount()) > 0
+                    && orderPosition.getPrice().substring(
+                            orderPosition.getPrice().indexOf(".")).length() == 2) {
+                return true;
+            } else {
+                db.createRejectForOrder(fileName, orderNum, 311, orderPosition.getPrice());
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            db.createRejectForOrder(fileName, orderNum, 311, orderPosition.getPrice());
+            return false;
+        }
+    }
 
 }
