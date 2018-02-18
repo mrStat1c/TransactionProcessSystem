@@ -4,12 +4,14 @@ public class OrderPosition {
     private String price;
     private String count;
     private boolean newProductInd;
+    private int number;
 
-    public OrderPosition(String product, String price, String count, boolean newProductInd){
+    public OrderPosition(String product, String price, String count, boolean newProductInd, int number){
         this.product = product;
         this.price = price;
         this.count = count;
         this.newProductInd = newProductInd;
+        this.number = number;
     }
 
     public String getProduct(){
@@ -26,6 +28,10 @@ public class OrderPosition {
 
     public boolean getNewProductInd() {
         return this.newProductInd;
+    }
+
+    public int getNumber() {
+        return this.number;
     }
 }
 

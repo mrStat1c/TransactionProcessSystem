@@ -290,6 +290,24 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    public void createRejectForOrderPosition(String fileName, int orderNumber, int orderPositionNumber, int rejectCode,
+                                             String fieldValue) throws SQLException {
+        statement = connection.createStatement();
+        StringBuilder query = new StringBuilder("INSERT INTO test.rejects (file_name, order_number, order_position_number, ")
+                .append("type, code, incorrect_field_value)")
+                .append(" VALUES (")
+                .append("'" + fileName + "'")
+                .append(", " + orderNumber)
+                .append(", " + orderPositionNumber + ", ")
+                .append("'" + RejectType.ORDER_POSITION + "'")
+                .append(", ")
+                .append(rejectCode)
+                .append(", ")
+                .append("'" + fieldValue + "'")
+                .append(");");
+        statement.execute(query.toString());
+    }
+
     public boolean lateDispatchAgreement(Order order) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")

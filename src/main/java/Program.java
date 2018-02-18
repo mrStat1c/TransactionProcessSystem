@@ -70,7 +70,8 @@ public class Program {
                                     xmlFile.getPositionElementValue(i, j, "product"),
                                     xmlFile.getPositionElementValue(i, j, "price"),
                                     xmlFile.getPositionElementValue(i, j, "count"),
-                                    newProductInd));
+                                    newProductInd,
+                                    j + 1));
                         }
                         Order order = new Order(
                                 xmlFile.getOrderElementValue(i, "sale_point"),

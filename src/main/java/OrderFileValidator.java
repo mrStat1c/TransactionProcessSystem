@@ -1,7 +1,8 @@
 
+import com.sun.xml.internal.bind.v2.TODO;
+
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,7 +33,7 @@ class OrderFileValidator {
     }
 
     static boolean validateOrder(String fileName, Order order) throws SQLException, ParseException {
-        if (!validateFieldExisting(fileName, order) && !validateOrderForDublication(fileName, order)){
+        if (!validateOrderFieldExisting(fileName, order) && !validateOrderForDublication(fileName, order)){
             return false;
         }
         boolean orderDateIsCorrect = validateOrderDate(fileName, order);
@@ -128,7 +129,7 @@ class OrderFileValidator {
         }
     }
 
-    private static boolean validateFieldExisting(String fileName, Order order) throws SQLException {
+    private static boolean validateOrderFieldExisting(String fileName, Order order) throws SQLException {
         //TODO сделать через рефлексию
         //Field[] orderFields = order.getClass().getDeclaredFields();
         Map<String, String> orderFields = new HashMap<>();
@@ -160,6 +161,9 @@ class OrderFileValidator {
     }
 
     static boolean validateOrderPosition(String fileName, int orderNum, String orderSalePoint, OrderPosition orderPosition) throws SQLException {
+        if(!validateOrderPositionFieldExisting(fileName, orderNum, orderPosition)){
+            return false;
+        }
         boolean result = true;
         if (!orderPosition.getNewProductInd() || !db.newProductAgreement(orderSalePoint)){
                 result = validateProduct(fileName, orderNum, orderPosition);
@@ -173,7 +177,7 @@ class OrderFileValidator {
         if (db.productExists(orderPosition.getProduct())){
             return true;
         } else {
-            db.createRejectForOrder(fileName, orderNum, 300, orderPosition.getProduct());
+            db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 300, orderPosition.getProduct());
             return false;
         }
     }
@@ -184,11 +188,11 @@ class OrderFileValidator {
                     && orderPosition.getCount().length() <= 3) {
                 return true;
             } else {
-                db.createRejectForOrder(fileName, orderNum, 310, orderPosition.getCount());
+                db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 310, orderPosition.getCount());
                 return false;
             }
         } catch (NumberFormatException e) {
-            db.createRejectForOrder(fileName, orderNum, 310, orderPosition.getCount());
+            db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 310, orderPosition.getCount());
             return false;
         }
     }
@@ -200,13 +204,29 @@ class OrderFileValidator {
                             orderPosition.getPrice().indexOf(".")).length() == 2) {
                 return true;
             } else {
-                db.createRejectForOrder(fileName, orderNum, 311, orderPosition.getPrice());
+                db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 311, orderPosition.getPrice());
                 return false;
             }
         } catch (NumberFormatException e) {
-            db.createRejectForOrder(fileName, orderNum, 311, orderPosition.getPrice());
+            db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 311, orderPosition.getPrice());
             return false;
         }
+    }
+
+    private static boolean validateOrderPositionFieldExisting(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
+        //TODO сделать через рефлексию
+        //Field[] orderFields = order.getClass().getDeclaredFields();
+        Map<String, String> orderPositionFields = new HashMap<>();
+        orderPositionFields.put("product", orderPosition.getProduct());
+        orderPositionFields.put("price", orderPosition.getPrice());
+        orderPositionFields.put("count", orderPosition.getCount());
+        for(Map.Entry field: orderPositionFields.entrySet()){
+            if (field.getValue().equals("")){
+                db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 320, field.getKey() + " is absent");
+                return false;
+            }
+        }
+        return true;
     }
 
 }
