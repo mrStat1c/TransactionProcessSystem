@@ -1,8 +1,9 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.JDOMException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -10,13 +11,11 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
-
 
 public class Program {
 
     public static void main(String[] args) throws IOException, InterruptedException, JDOMException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
-        Logger log = Logger.getLogger("main.log");
+         Logger log = LogManager.getLogger(Program.class.getName());
 
         OrderProcessingSystem cs = new OrderProcessingSystem();
         List<File> files = new ArrayList<>();
@@ -29,6 +28,7 @@ public class Program {
         MySQLDb db = new MySQLDb(cs.systemProperties);
 
         try {
+            log.info("File processing is starting.");
             //TODO придумать, как сделать правильно проверки на пустые списки файлов в папке и файлов для загрузки
             files = new ArrayList<>(Arrays.asList(inputPath.toFile().listFiles()));
             for (int i = 0; i < files.size(); i++) {
@@ -36,15 +36,16 @@ public class Program {
                     db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
                  //   Files.move(inputPath.resolve(files.get(i).getName()),
                  //           rejectedPath.resolve(files.get(i).getName()));
+                    log.info("File " + files.get(i).getName() + " rejected.");
                     files.remove(i);
                     i--;
                 }
             }
         } catch (NullPointerException e) {
-            log.info("Нет файлов для загрузки");
+            log.warn("No files for processing.");
         }
         if (files.isEmpty()) {
-            log.info("Нет файлов для загрузки");
+            log.warn("No files for processing.");
             return;
         }
 
@@ -55,6 +56,7 @@ public class Program {
                     db.createFile(file.getName(), OrderFileStatus.DUBLICATE);
                     //   Files.move(inputPath.resolve(file.getName()),
                     //          dublicatePath.resolve(file.getName()));
+                    log.info("File " + file.getName() + " is dublicate.");
                 } else {
                     db.createFile(file.getName(), OrderFileStatus.PROCESSING);
                     XMLParser xmlFile = new XMLParser(file);
@@ -93,14 +95,17 @@ public class Program {
                     db.updateFileStatus(file.getName(), OrderFileStatus.OK);
                     //          Files.move(inputPath.resolve(file.getName()),
                     //                 completedPath.resolve(file.getName()));
+                    log.info("File " + file.getName() + " processed.");
                 }
             } catch (JDOMException e) {
-                System.out.println("Ошибка при обработке файла:\n" + e.getMessage());
+                log.warn("e.getMessage()");
                 db.updateFileStatus(file.getName(), OrderFileStatus.FAILED);
                 //     Files.move(inputPath.resolve(file.getName()),
                 //             failedPath.resolve(file.getName()));
+                log.info("File " + file.getName() + " didn't process.");
             }
         }
+        log.info("File processing finished.");
     }
 }
 

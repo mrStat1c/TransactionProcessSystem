@@ -1,3 +1,6 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -13,6 +16,7 @@ public class IndicatorStamper {
     private boolean productLineInd;
     private double productLineMinSum;
     private MySQLDb db;
+    private static final Logger log = LogManager.getLogger(IndicatorStamper.class.getName());
 
     public IndicatorStamper(Properties properties, MySQLDb db) throws IOException {
         this.db = db;
@@ -29,6 +33,7 @@ public class IndicatorStamper {
             for (OrderPosition position : order.getPositions()) {
                 if (db.getProductLine(position.getProduct()).equals("ALCOHOL")) {
                     order.addIndicator(OrderIndicator.ALCOHOL);
+                    log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " + OrderIndicator.ALCOHOL);
                     break;
                 }
             }
@@ -41,6 +46,7 @@ public class IndicatorStamper {
             }
             if (orderSum >= lotteryMinSum){
                 order.addIndicator(OrderIndicator.LOTTERY);
+                log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " + OrderIndicator.LOTTERY);
             }
         }
         if (productLineInd){
@@ -55,7 +61,11 @@ public class IndicatorStamper {
             }
             prodLineGroups.entrySet().stream()
                     .filter(entry -> entry.getValue() >= productLineMinSum)
-                    .forEach(entry -> order.addIndicator(OrderIndicator.PROD_LINE, ".".concat(entry.getKey())));
+                    .forEach(entry -> {
+                        order.addIndicator(OrderIndicator.PROD_LINE, ".".concat(entry.getKey()));
+                        log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " +
+                                OrderIndicator.PROD_LINE.toString().concat(".").concat(entry.getKey()));
+                    });
         }
         return order;
     }
