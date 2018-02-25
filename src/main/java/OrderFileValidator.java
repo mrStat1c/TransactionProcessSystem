@@ -9,6 +9,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * Выполняет валидацию файла с заказами на уровнях файла, заказов и позиций
+ */
 class OrderFileValidator {
 
     private static OrderProcessingSystem cs;
@@ -24,7 +27,11 @@ class OrderFileValidator {
 
     private static MySQLDb db = new MySQLDb(cs.systemProperties);
 
-    //Создают реджекты, если они есть и отдают true/false - прошла ли сущность проверку
+    /** Производит валидацию файла и, в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param file Файл
+     * @return true - файл прошел валидацию<br> false - файл не прошел валидацию
+     * @throws SQLException
+     */
     static boolean validateFile(File file) throws SQLException {
         if (file.getName().endsWith(".xml")) {
             return true;
@@ -35,6 +42,13 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит валидацию заказа по различным проверкам
+     * @param fileName Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел валидацию<br> false - заказ не прошел валидацию
+     * @throws SQLException
+     * @throws ParseException
+     */
     static boolean validateOrder(String fileName, Order order) throws SQLException, ParseException {
         if (!validateOrderFieldExisting(fileName, order) && !validateOrderForDublication(fileName, order)){
             return false;
@@ -55,6 +69,12 @@ class OrderFileValidator {
         return result;
     }
 
+    /** Производит проверку корректности формата даты заказа, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateOrderDate(String fileName, Order order) throws SQLException {
         GregorianCalendar calendar = new GregorianCalendar();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -69,6 +89,12 @@ class OrderFileValidator {
         return true;
     }
 
+    /** Производит проверку на своевременность отправки заказа в обработку, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateLateDispatch(String fileName, Order order) throws ParseException, SQLException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date orderDate = dateFormat.parse(order.getDate());
@@ -83,6 +109,12 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на существование торговой точки, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateSalePoint(String fileName, Order order) throws SQLException {
         if (db.salePointExists(order.getSalePoint())) {
             return true;
@@ -93,6 +125,12 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на существование карты, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateCard(String fileName, Order order) throws SQLException {
         if (db.cardExists(order.getCard())) {
             return true;
@@ -103,6 +141,12 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на валидность статуса карты на время создания заказа, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateCardStatus(String fileName, Order order) throws SQLException, ParseException {
         String cardStatus = db.getCardStatusForOrderDate(order.getCard(), order.getDate());
         if (cardStatus.equals("Active")) {
@@ -114,6 +158,12 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на существование кода валюты, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateCurrency(String fileName, Order order) throws SQLException {
         if (db.currencyExists(order.getCurrency())){
             return true;
@@ -124,7 +174,12 @@ class OrderFileValidator {
         }
     }
 
-
+    /** Производит проверку на разрешение обработки конкретной валюты для торговой точки, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateForeignCurrency(String fileName, Order order) throws SQLException {
         if (!order.getCurrency().equals("RUB")) {
             if (db.foreignCurrencyAgreement(order)) {
@@ -139,6 +194,13 @@ class OrderFileValidator {
         }
     }
 
+
+    /** Производит проверку на наличие обязательных полей в заказе, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateOrderFieldExisting(String fileName, Order order) throws SQLException {
         //TODO сделать через рефлексию
         //Field[] orderFields = order.getClass().getDeclaredFields();
@@ -163,6 +225,12 @@ class OrderFileValidator {
         return true;
     }
 
+    /** Производит проверку заказа на дубликат, и в случае нахождения дубликата, создает запись об ошибке в бд
+     * @param fileName  Имя файла, в котором находится заказ
+     * @param order Заказ
+     * @return true - заказ прошел проверку<br> false - заказ не прошел проверку
+     * @throws SQLException
+     */
     private static boolean validateOrderForDublication(String fileName, Order order) throws SQLException {
         if(db.orderExists(order)){
             db.createRejectForOrder(fileName, order.getOrderNum(), 250, "dublicate");
@@ -173,6 +241,14 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит валидацию позиции заказа по различным проверкам
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNum Системный номер заказа
+     * @param orderSalePoint Название торговой точки в заказе
+     * @param orderPosition Позиция заказа
+     * @return true - позиция заказа прошла валидацию<br> false - позиция заказа не прошла валидацию
+     * @throws SQLException
+     */
     static boolean validateOrderPosition(String fileName, int orderNum, String orderSalePoint, OrderPosition orderPosition) throws SQLException {
         if(!validateOrderPositionFieldExisting(fileName, orderNum, orderPosition)){
             return false;
@@ -186,6 +262,14 @@ class OrderFileValidator {
                 & validateProductPrice(fileName, orderNum, orderPosition);
     }
 
+
+    /** Производит проверку на существование продукта, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNum Системный номер заказа
+     * @param orderPosition Позиция заказа
+     * @return  позиция заказа прошла проверку<br> false - позиция заказа не прошла проверку
+     * @throws SQLException
+     */
     private static boolean validateProduct(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
         if (db.productExists(orderPosition.getProduct())){
             return true;
@@ -196,6 +280,13 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на корректность количества продукта, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNum Системный номер заказа
+     * @param orderPosition Позиция заказа
+     * @return  позиция заказа прошла проверку<br> false - позиция заказа не прошла проверку
+     * @throws SQLException
+     */
     private static boolean validateProductCount(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
         try {
             if (Integer.parseInt(orderPosition.getCount()) > 0
@@ -213,6 +304,13 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на корректность цены продукта, и в случае нахождения ошибки, создает запись об ошибке в бд
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNum Системный номер заказа
+     * @param orderPosition Позиция заказа
+     * @return  позиция заказа прошла проверку<br> false - позиция заказа не прошла проверку
+     * @throws SQLException
+     */
     private static boolean validateProductPrice(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
         try {
             if (Double.parseDouble(orderPosition.getCount()) > 0
@@ -231,6 +329,13 @@ class OrderFileValidator {
         }
     }
 
+    /** Производит проверку на наличие обязательных полей в позиции заказа, и в случае отсутствия поля, создает запись об ошибке в бд
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNum Системный номер заказа
+     * @param orderPosition Позиция заказа
+     * @return  позиция заказа прошла проверку<br> false - позиция заказа не прошла проверку
+     * @throws SQLException
+     */
     private static boolean validateOrderPositionFieldExisting(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
         //TODO сделать через рефлексию
         //Field[] orderFields = order.getClass().getDeclaredFields();

@@ -7,7 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-
+/**
+ * Добавляет к Order индикаторы OrderIndicators
+ */
 public class IndicatorStamper {
 
     private boolean alcoholInd;
@@ -18,6 +20,11 @@ public class IndicatorStamper {
     private MySQLDb db;
     private static final Logger log = LogManager.getLogger(IndicatorStamper.class.getName());
 
+    /**
+     * @param properties Настройки параметров для индикаторов
+     * @param db Объект для работы с данными в бд
+     * @throws IOException
+     */
     public IndicatorStamper(Properties properties, MySQLDb db) throws IOException {
         this.db = db;
         this.alcoholInd = Boolean.parseBoolean(properties.getProperty("validator.alcohol"));
@@ -27,6 +34,9 @@ public class IndicatorStamper {
         this.productLineMinSum = Double.parseDouble(properties.getProperty("validator.productLineMinSum"));
     }
 
+    /**
+     * В зависимости от условий, добавляет к Order индикаторы OrderIndicators
+     */
     public Order processOrder(Order order) throws SQLException {
         Double currencyCourse = db.getCurrencyCourse(order.getCurrency(), order.getDate());
         if (alcoholInd) {

@@ -1,5 +1,5 @@
 /**
- * Created by Static on 24.12.2017.
+ * Типы отклонений от обработки
  */
 public enum RejectType {
     FILE,

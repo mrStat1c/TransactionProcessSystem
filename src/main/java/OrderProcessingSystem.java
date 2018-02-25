@@ -1,6 +1,9 @@
 import java.io.*;
 import java.util.Properties;
 
+/**
+ * Класс, инкапсулирующий системные настройки
+ */
 class OrderProcessingSystem {
 
     public Properties systemProperties;

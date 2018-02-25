@@ -3,6 +3,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * Класс, инкапсулирующий заказ
+ */
 public class Order {
 
     private String salePoint;
@@ -49,10 +52,17 @@ public class Order {
 
     public Set<String> getIndicators(){return this.indicators;}
 
+    /** Добавляет к заказу
+     * @param indicator Индикатор
+     */
     public void addIndicator(OrderIndicator indicator){
         this.indicators.add(indicator.toString());
     }
 
+    /** Добавляет к заказу индикатор, имеющий подполе
+     * @param indicator Индикатор
+     * @param subField Подполе
+     */
     public void addIndicator(OrderIndicator indicator, String subField){
         this.indicators.add(indicator + subField);
     }

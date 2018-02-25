@@ -1,3 +1,6 @@
+/**
+ * Класс, инкапсулирующий позицию в заказе
+ */
 public class OrderPosition {
 
     private String product;

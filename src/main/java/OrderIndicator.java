@@ -1,4 +1,6 @@
-
+/**
+ * Индикаторы, которые могут быть добавлены в заказ
+ */
 public enum OrderIndicator {
     ALCOHOL,
     LOTTERY,

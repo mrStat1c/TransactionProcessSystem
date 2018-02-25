@@ -5,12 +5,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
+/**
+ * Класс для работы с данными в бд Mysql
+ */
 public class MySQLDb {
 
     public Connection connection = null;
     private Statement statement = null;
     private Properties properties;
 
+    /** Создание подключения к бд
+     * @param properties Настройки подключения к бд
+     */
     public MySQLDb(Properties properties) {
         try {
             this.properties = properties;
@@ -27,6 +33,11 @@ public class MySQLDb {
     }
 
 
+    /**Возвращает идентификатор торговой точки по ее названию
+     * @param salePointName Название торговой точки
+     * @return Идентификатор торговой точки
+     * @throws SQLException
+     */
     public int getSalePointId(String salePointName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT id FROM test.sale_points WHERE name = '" + salePointName + "'";
@@ -40,9 +51,14 @@ public class MySQLDb {
         }
     }
 
-    public int getCardId(String cardName) throws SQLException {
+    /** Возвращает идентификатор карты по ее номеру
+     * @param cardNumber Номер карты
+     * @return Идентификатор карты
+     * @throws SQLException
+     */
+    public int getCardId(String cardNumber) throws SQLException {
         statement = connection.createStatement();
-        String query = "SELECT id FROM test.cards WHERE number = '" + cardName + "'";
+        String query = "SELECT id FROM test.cards WHERE number = '" + cardNumber + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
         try {
@@ -53,6 +69,11 @@ public class MySQLDb {
         }
     }
 
+    /** Возвращает идентификатор продукта по его названию
+     * @param productName Название продукта
+     * @return Идентификатор продукта
+     * @throws SQLException
+     */
     public int getProductId(String productName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT id FROM test.products WHERE name = '" + productName + "'";
@@ -61,6 +82,11 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
+    /** Возвращает название продуктовой линии продукта по названию продукта
+     * @param productName Название продукта
+     * @return Название продуктовой линии
+     * @throws SQLException
+     */
     public String getProductLine(String productName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT name FROM test.product_lines WHERE id = " +
@@ -70,6 +96,11 @@ public class MySQLDb {
         return resultSet.getString("name");
     }
 
+    /** Возвращает идентификатор файла по его имени
+     * @param fileName Имя Файла
+     * @return Идентификатор файла
+     * @throws SQLException
+     */
     public int getFileId(String fileName) throws SQLException {
         statement = connection.createStatement();
         String query = "SELECT file_id FROM test.files WHERE name = '" + fileName + "'";
@@ -79,6 +110,11 @@ public class MySQLDb {
     }
 
 
+    /** Проверяет, существует ли файл в бд по его имени
+     * @param fileName Имя файла
+     * @return true - файл существует<br> false - файл не существует
+     * @throws SQLException
+     */
     public boolean fileExists(String fileName) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as x from test.files WHERE ")
@@ -92,6 +128,11 @@ public class MySQLDb {
         }
     }
 
+    /** Создает запись о файле в бд
+     * @param fileName Имя файла
+     * @param status Статус файла
+     * @throws SQLException
+     */
     public void createFile(String fileName, OrderFileStatus status) throws SQLException {
         StringBuilder sb = new StringBuilder("");
         Random generator = new Random();
@@ -111,6 +152,11 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    /** Обновляет статус файла в бд
+     * @param fileName Имя файла
+     * @param status Новый статус файла
+     * @throws SQLException
+     */
     public void updateFileStatus(String fileName, OrderFileStatus status) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("UPDATE test.files")
@@ -122,6 +168,12 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    /** Создает запись о заказе в бд
+     * @param order Заказ
+     * @param fileName Имя файла, в котором находится заказ
+     * @param rejected true - Заказ отклонен, false - Заказ обработан без ошибок
+     * @throws SQLException
+     */
     public void createOrder(Order order, String fileName, char rejected) throws SQLException {
         StringBuilder sb;
         int orderNumber = order.getOrderNum();
@@ -169,6 +221,11 @@ public class MySQLDb {
     }
 
 
+    /** Проверяет, существует ли заказ в бд
+     * @param order Заказ
+     * @return true - Заказ существует в бд<br> false - Заказ не существует в бд
+     * @throws SQLException
+     */
     boolean orderExists(Order order) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) count FROM test.orders")
@@ -191,9 +248,14 @@ public class MySQLDb {
         }
     }
 
-    private int getCurrencyId(String currency) throws SQLException {
+    /** Возвращает идентификатор курса валюты по коду валюты
+     * @param currencyСode Код валюты
+     * @return Идентификатор валюты
+     * @throws SQLException
+     */
+    private int getCurrencyId(String currencyСode) throws SQLException {
         statement = connection.createStatement();
-        String query = "SELECT id FROM test.currencies WHERE code = '" + currency + "'";
+        String query = "SELECT id FROM test.currencies WHERE code = '" + currencyСode + "'";
         ResultSet resultSet = statement.executeQuery(query);
         resultSet.next();
         try {
@@ -204,6 +266,14 @@ public class MySQLDb {
         }
     }
 
+    /** Создает запись в бд о позиции в заказе
+     * @param orderPosition Позиция в заказе
+     * @param orderId Идентификатор заказа в бд
+     * @param currencyCode Код валюты заказа
+     * @param orderDate Дата заказа
+     * @param rejected true - Позиция заказа отклонена, false - Позиция заказа обработана без ошибок
+     * @throws SQLException
+     */
     private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate, char rejected) throws SQLException {
         statement = connection.createStatement();
         Double settlPrice = getCurrencyCourse(currencyCode, orderDate) * Double.parseDouble(orderPosition.getPrice());
@@ -226,6 +296,12 @@ public class MySQLDb {
     }
 
 
+    /** Возвращает курс валюты на конкретную дату
+     * @param currencyCode Код валюты
+     * @param courseDate Дата, на которую необходимо определить курс
+     * @return Курс валюты
+     * @throws SQLException
+     */
     public Double getCurrencyCourse(String currencyCode, String courseDate) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT course FROM test.currency_courses")
@@ -241,6 +317,11 @@ public class MySQLDb {
         return resultSet.getDouble("course");
     }
 
+    /** Создает записи в бд обо всех индикаторах заказа
+     * @param orderIndicators Индикаторы заказа
+     * @param orderId Идентификатор заказа в бд
+     * @throws SQLException
+     */
     private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
         statement = connection.createStatement();
         orderIndicators.forEach(indicator ->
@@ -259,6 +340,11 @@ public class MySQLDb {
         });
     }
 
+    /** Создает запись об отклонении файла от обработки
+     * @param fileName Имя файла
+     * @param rejectCode Код ошибки из-за которой файл отклоняется от обработки
+     * @throws SQLException
+     */
     public void createRejectForFile(String fileName, int rejectCode) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("INSERT INTO test.rejects (file_name, order_number, order_position_number, ")
@@ -273,6 +359,14 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+
+    /** Создает запись об отклонении заказа от обработки
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNumber Системный номер заказа
+     * @param rejectCode Код ошибки из-за которой заказ отклоняется от обработки
+     * @param fieldValue Значение поля из-за которого произошла ошибка
+     * @throws SQLException
+     */
     public void createRejectForOrder(String fileName, int orderNumber, int rejectCode, String fieldValue) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("INSERT INTO test.rejects (file_name, order_number, order_position_number, ")
@@ -290,6 +384,14 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    /** Создает запись об отклонении позиции заказа от обработки
+     * @param fileName Имя файла, в котором находится заказ
+     * @param orderNumber Системный номер заказа, в котором находится позиция заказа
+     * @param orderPositionNumber Порядковый номер позиции в заказе
+     * @param rejectCode Код ошибки из-за которой позиция заказа отклоняется от обработки
+     * @param fieldValue Значение поля из-за которого произошла ошибка
+     * @throws SQLException
+     */
     public void createRejectForOrderPosition(String fileName, int orderNumber, int orderPositionNumber, int rejectCode,
                                              String fieldValue) throws SQLException {
         statement = connection.createStatement();
@@ -308,6 +410,11 @@ public class MySQLDb {
         statement.execute(query.toString());
     }
 
+    /** Проверяет наличие соглашения у торговой точки на позднее представление заказов на обработку
+     * @param order Заказ, в рамках которого происходит проверка
+     * @return true - соглашение имеется<br> false - соглашение отсутствует
+     * @throws SQLException
+     */
     public boolean lateDispatchAgreement(Order order) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
@@ -320,6 +427,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет наличие соглашения у торговой точки на представление заказов с иностранной валютой на обработку
+     * @param order Заказ, в рамках которого происходит проверка
+     * @return true - соглашение имеется<br> false - соглашение отсутствует
+     * @throws SQLException
+     */
     public boolean foreignCurrencyAgreement(Order order) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
@@ -332,6 +444,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет наличие соглашения у торговой точки на представление заказов с неизвестным продуктом на обработку
+     * @param salePoint Название торговой точки
+     * @return true - соглашение имеется<br> false - соглашение отсутствует
+     * @throws SQLException
+     */
     public boolean newProductAgreement(String salePoint) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_point_agreements")
@@ -344,6 +461,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет существование в бд торговой точки
+     * @param salePoint Название торговой точки
+     * @return true - торговая точка существует<br> false - торговая точка не существует
+     * @throws SQLException
+     */
     public boolean salePointExists(String salePoint) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.sale_points")
@@ -354,6 +476,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет существование в бд карты
+     * @param cardNumber Номер карты
+     * @return true - карта существует<br> false - карта не существует
+     * @throws SQLException
+     */
     public boolean cardExists(String cardNumber) throws SQLException {
         //проверяет только, если тег card существует и заполнен
         statement = connection.createStatement();
@@ -365,6 +492,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет существование в бд кода валюты
+     * @param currencyCode Код валюты
+     * @return true - код валюты существует<br> false - код валюты не существует
+     * @throws SQLException
+     */
     public boolean currencyExists(String currencyCode) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.currencies")
@@ -375,6 +507,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Проверяет существование в бд продукта
+     * @param productName Название продукта
+     * @return true - продукт существует<br> false - продукт не существует
+     * @throws SQLException
+     */
     public boolean productExists(String productName) throws SQLException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT count(*) as count from test.products")
@@ -385,6 +522,13 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
+    /** Возвращает статус карты на момент создания заказа
+     * @param cardNumber Номер карты
+     * @param orderDate Дата заказа
+     * @return Статус карты
+     * @throws SQLException
+     * @throws ParseException
+     */
     public String getCardStatusForOrderDate(String cardNumber, String orderDate) throws SQLException, ParseException {
         statement = connection.createStatement();
         StringBuilder query = new StringBuilder("SELECT ch.begin_date date, cs.status status from test.cards c")
