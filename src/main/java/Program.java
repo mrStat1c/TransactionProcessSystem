@@ -18,15 +18,14 @@ public class Program {
     public static void main(String[] args) throws IOException, InterruptedException, JDOMException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
          Logger log = LogManager.getLogger(Program.class.getName());
 
-        OrderProcessingSystem cs = new OrderProcessingSystem();
         List<File> files = new ArrayList<>();
-        Path inputPath = Paths.get(cs.systemProperties.getProperty("inputPath"));
-        Path completedPath = Paths.get(cs.systemProperties.getProperty("completedPath"));
-        Path failedPath = Paths.get(cs.systemProperties.getProperty("failedPath"));
-        Path dublicatePath = Paths.get(cs.systemProperties.getProperty("dublicatePath"));
-        Path rejectedPath = Paths.get(cs.systemProperties.getProperty("rejectedPath"));
+        Path inputPath = Paths.get(systemProperties.get("inputPath"));
+        Path completedPath = Paths.get(systemProperties.get("completedPath"));
+        Path failedPath = Paths.get(systemProperties.get("failedPath"));
+        Path dublicatePath = Paths.get(systemProperties.get("dublicatePath"));
+        Path rejectedPath = Paths.get(systemProperties.get("rejectedPath"));
         IndicatorStamper indicatorStamper;
-        MySQLDb db = new MySQLDb(cs.systemProperties);
+        MySQLDb db = new MySQLDb();
 
         try {
             log.info("File processing is starting.");
@@ -50,7 +49,7 @@ public class Program {
             return;
         }
 
-        indicatorStamper = new IndicatorStamper(cs.systemProperties, db);
+        indicatorStamper = new IndicatorStamper(db);
         for (File file : files) {
             try {
                 if (db.fileExists(file.getName())) {

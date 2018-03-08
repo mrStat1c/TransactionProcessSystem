@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Добавляет к Order индикаторы OrderIndicators
@@ -21,17 +20,15 @@ public class IndicatorStamper {
     private static final Logger log = LogManager.getLogger(IndicatorStamper.class.getName());
 
     /**
-     * @param properties Настройки параметров для индикаторов
      * @param db Объект для работы с данными в бд
-     * @throws IOException
      */
-    public IndicatorStamper(Properties properties, MySQLDb db) throws IOException {
+    IndicatorStamper(MySQLDb db) {
         this.db = db;
-        this.alcoholInd = Boolean.parseBoolean(properties.getProperty("validator.alcohol"));
-        this.lotteryInd = Boolean.parseBoolean(properties.getProperty("validator.lottery"));
-        this.lotteryMinSum = Double.parseDouble(properties.getProperty("validator.lotteryMinSum"));
-        this.productLineInd = Boolean.parseBoolean(properties.getProperty("validator.productLine"));
-        this.productLineMinSum = Double.parseDouble(properties.getProperty("validator.productLineMinSum"));
+        this.alcoholInd = Boolean.parseBoolean(systemProperties.get("validator.alcohol"));
+        this.lotteryInd = Boolean.parseBoolean(systemProperties.get("validator.lottery"));
+        this.lotteryMinSum = Double.parseDouble(systemProperties.get("validator.lotteryMinSum"));
+        this.productLineInd = Boolean.parseBoolean(systemProperties.get("validator.productLine"));
+        this.productLineMinSum = Double.parseDouble(systemProperties.get("validator.productLineMinSum"));
     }
 
     /**

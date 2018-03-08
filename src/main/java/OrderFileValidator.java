@@ -3,7 +3,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,18 +13,8 @@ import java.util.*;
  */
 class OrderFileValidator {
 
-    private static OrderProcessingSystem cs;
     private static final Logger log = LogManager.getLogger(OrderFileValidator.class.getName());
-
-    //TODO избавиться от static блока
-    static {
-        try {
-            cs = new OrderProcessingSystem();
-        } catch (IOException e) {
-        }
-    }
-
-    private static MySQLDb db = new MySQLDb(cs.systemProperties);
+    private static MySQLDb db = new MySQLDb();
 
     /** Производит валидацию файла и, в случае нахождения ошибки, создает запись об ошибке в бд
      * @param file Файл
