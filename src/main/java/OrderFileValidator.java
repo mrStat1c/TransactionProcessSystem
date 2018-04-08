@@ -45,7 +45,6 @@ class OrderFileValidator {
         boolean orderDateIsCorrect = validateOrderDate(fileName, order);
         boolean cardNumberIsCorrect = false;//карта существует и она корректна
         boolean salePointIsCorrect = validateSalePoint(fileName, order);
-        //вроде дальше не верно, т.к. сначала нужно проверять корректность salePoint, а потом уже LateDispatch
         boolean result = (orderDateIsCorrect && validateLateDispatch(fileName, order)) & salePointIsCorrect;
         if (!order.getCard().isEmpty()) {
             cardNumberIsCorrect = validateCard(fileName, order);

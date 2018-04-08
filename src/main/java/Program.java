@@ -4,6 +4,7 @@ import org.jdom2.JDOMException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -11,6 +12,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 
 public class Program {
@@ -27,23 +29,9 @@ public class Program {
         IndicatorStamper indicatorStamper;
         MySQLDb db = new MySQLDb();
 
-        try {
-            log.info("File processing is starting.");
-            //TODO придумать, как сделать правильно проверки на пустые списки файлов в папке и файлов для загрузки
-            files = new ArrayList<>(Arrays.asList(inputPath.toFile().listFiles()));
-            for (int i = 0; i < files.size(); i++) {
-                if (!OrderFileValidator.validateFile(files.get(i))) {
-                    db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
-                 //   Files.move(inputPath.resolve(files.get(i).getName()),
-                 //           rejectedPath.resolve(files.get(i).getName()));
-                    log.info("File " + files.get(i).getName() + " rejected.");
-                    files.remove(i);
-                    i--;
-                }
-            }
-        } catch (NullPointerException e) {
-            log.warn("No files for processing.");
-        }
+        files = SystemManager.removeInvalidFiles(
+                SystemManager.findFiles(inputPath));
+
         if (files.isEmpty()) {
             log.warn("No files for processing.");
             return;
@@ -54,8 +42,8 @@ public class Program {
             try {
                 if (db.fileExists(file.getName())) {
                     db.createFile(file.getName(), OrderFileStatus.DUBLICATE);
-                    //   Files.move(inputPath.resolve(file.getName()),
-                    //          dublicatePath.resolve(file.getName()));
+                       Files.move(inputPath.resolve(file.getName()),
+                              dublicatePath.resolve(file.getName()));
                     log.info("File " + file.getName() + " is dublicate.");
                 } else {
                     db.createFile(file.getName(), OrderFileStatus.PROCESSING);
@@ -77,8 +65,6 @@ public class Program {
                         }
                         Order order = new Order(
                                 xmlFile.getOrderElementValue(i, "sale_point"),
-//                                xmlFile.orderElementExists(i, "card") ?
-//                                        xmlFile.getOrderElementValue(i, "card") : "",
                                 xmlFile.getOrderElementValue(i, "card"),
                                 xmlFile.getOrderElementValue(i, "date"),
                                 positions,
@@ -89,19 +75,18 @@ public class Program {
                             db.createOrder(order, file.getName(), 'N');
                         } else {
                             db.createOrder(order, file.getName(), 'Y');
-                            //Если реджект по sale_point, записать null
                         }
                     }
                     db.updateFileStatus(file.getName(), OrderFileStatus.OK);
-                    //          Files.move(inputPath.resolve(file.getName()),
-                    //                 completedPath.resolve(file.getName()));
+                              Files.move(inputPath.resolve(file.getName()),
+                                     completedPath.resolve(file.getName()));
                     log.info("File " + file.getName() + " processed.");
                 }
             } catch (JDOMException e) {
                 log.warn("e.getMessage()");
                 db.updateFileStatus(file.getName(), OrderFileStatus.FAILED);
-                //     Files.move(inputPath.resolve(file.getName()),
-                //             failedPath.resolve(file.getName()));
+                     Files.move(inputPath.resolve(file.getName()),
+                             failedPath.resolve(file.getName()));
                 log.info("File " + file.getName() + " didn't process.");
             }
         }

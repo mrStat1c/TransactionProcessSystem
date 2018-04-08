@@ -2,7 +2,9 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Date;
 
 /**
  * Класс для работы с данными в бд Mysql
@@ -119,12 +121,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public void createFile(String fileName, OrderFileStatus status) throws SQLException {
-        StringBuilder sb = new StringBuilder("");
-        Random generator = new Random();
-        for (int i = 0; i < 8; i++) {
-            sb.append(generator.nextInt(10));
-        }
-        int fileId = Integer.parseInt(sb.toString());
+        int fileId = NumGenerator.generate(8);
         String query = "INSERT INTO test.files (file_id, name, status)" +
                 " VALUES (" +
                 "'" + fileId + "'" +
@@ -166,7 +163,7 @@ public class MySQLDb {
                 if (OrderFileValidator.validateOrderPosition(fileName, order.getOrderNum(), order.getSalePoint(), position)) {
                     createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'N');
                 } else {
-                    //создать orderPosition с реджектом
+                    createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'Y');
                 }
             }
             sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_number ='")
@@ -438,7 +435,6 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean cardExists(String cardNumber) throws SQLException {
-        //проверяет только, если тег card существует и заполнен
         String query = "SELECT count(*) as count from test.cards" +
                 " WHERE number = " +
                 "'" + cardNumber + "';";
@@ -489,11 +485,6 @@ public class MySQLDb {
         getResultSet(query);
         Hashtable<String, String> cardStatuses = new Hashtable<>();
         List<String> dates = new ArrayList<>();
-//        while (resultSet.next()){
-//            cardStatuses.put(resultSet.getString("date"), resultSet.getString("status"));
-//            dates.add(resultSet.getString("date"));
-//        }
-//        Нужно удалить, т.к. переписано под do-while
         do {
             cardStatuses.put(resultSet.getString("date"), resultSet.getString("status"));
             dates.add(resultSet.getString("date"));

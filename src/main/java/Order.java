@@ -1,6 +1,5 @@
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -24,12 +23,7 @@ public class Order {
         this.positions = positions;
         this.currency = currency;
         this.salePointOrderNum = salePointOrderNum;
-        StringBuilder sb = new StringBuilder("");
-        Random generator = new Random();
-        for (int i = 0; i < 8; i++) {
-            sb.append(generator.nextInt(10));
-        }
-        this.orderNum = Integer.parseInt(sb.toString());
+        this.orderNum = NumGenerator.generate(8);
     }
 
     public String getSalePoint(){
