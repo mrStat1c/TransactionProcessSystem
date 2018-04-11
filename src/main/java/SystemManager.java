@@ -1,5 +1,6 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdom2.JDOMException;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.*;
 
 public class SystemManager {
@@ -15,15 +17,15 @@ public class SystemManager {
     private static MySQLDb db = new MySQLDb();
 
     private static Path inputPath = Paths.get(systemProperties.get("inputPath"));
-    Path completedPath = Paths.get(systemProperties.get("completedPath"));
-    Path failedPath = Paths.get(systemProperties.get("failedPath"));
-    Path dublicatePath = Paths.get(systemProperties.get("dublicatePath"));
+    private static Path completedPath = Paths.get(systemProperties.get("completedPath"));
+    private static Path failedPath = Paths.get(systemProperties.get("failedPath"));
+    private static Path dublicatePath = Paths.get(systemProperties.get("dublicatePath"));
     private static Path rejectedPath = Paths.get(systemProperties.get("rejectedPath"));
+    private static IndicatorStamper indicatorStamper;
 
-
-    public static List<File> findFiles(Path path) {
+    public static List<File> findFiles() {
         log.info("File processing is starting.");
-        File [] files = path.toFile().listFiles();
+        File [] files = inputPath.toFile().listFiles();
         return files == null ? Collections.emptyList(): new ArrayList<>(Arrays.asList(files));
     }
 
@@ -31,13 +33,69 @@ public class SystemManager {
             for (int i = 0; i < files.size(); i++) {
                 if (!OrderFileValidator.validateFile(files.get(i))) {
                     db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
-                    Files.move(inputPath.resolve(files.get(i).getName()),
-                            rejectedPath.resolve(files.get(i).getName()));
+                    Files.move(inputPath.resolve(files.get(i).getName()), rejectedPath.resolve(files.get(i).getName()));
                     log.info("File " + files.get(i).getName() + " rejected.");
                     files.remove(i);
                     i--;
                 }
             }
        return files;
+    }
+
+    public static void startProcessing(List<File> files) throws SQLException, IOException, ParseException {
+        log.info("File processing started.");
+        indicatorStamper = new IndicatorStamper(db);
+        for (File file : files) {
+            String fileName = file.getName();
+            try {
+                if (db.fileExists(fileName)) {
+                    db.createFile(fileName, OrderFileStatus.DUBLICATE);
+                    Files.move(inputPath.resolve(fileName), dublicatePath.resolve(fileName));
+                    log.info("File " + fileName + " is dublicate.");
+                } else {
+                    db.createFile(fileName, OrderFileStatus.PROCESSING);
+                    XMLFile xmlFile = new XMLFile(file);
+                    for (int i = 0; i < xmlFile.getOrderCount(); i++) {
+                        processOrder(xmlFile, fileName);
+                    }
+                    db.updateFileStatus(fileName, OrderFileStatus.OK);
+                    Files.move(inputPath.resolve(fileName), completedPath.resolve(fileName));
+                    log.info("File " + fileName + " processed.");
+                }
+            } catch (JDOMException e) {
+                log.warn("e.getMessage()");
+                db.updateFileStatus(fileName, OrderFileStatus.FAILED);
+                Files.move(inputPath.resolve(fileName), failedPath.resolve(fileName));
+                log.info("File " + fileName + " didn't process.");
+            }
+        }
+        log.info("File processing finished.");
+    }
+
+    private static void processOrder(XMLFile xmlFile, String fileName) throws SQLException, ParseException {
+        for (int i = 0; i < xmlFile.getOrderCount(); i++) {
+            List<OrderPosition> positions = new ArrayList<>();
+            for (int j = 0; j < xmlFile.getPositionCount(i); j++) {
+                positions.add(new OrderPosition(
+                        xmlFile.getPositionElementValue(i, j, "product"),
+                        xmlFile.getPositionElementValue(i, j, "price"),
+                        xmlFile.getPositionElementValue(i, j, "count"),
+                        xmlFile.positionElementExists(i, j, "newProductInd"),
+                        j + 1));
+            }
+            Order order = new Order(
+                    xmlFile.getOrderElementValue(i, "sale_point"),
+                    xmlFile.getOrderElementValue(i, "card"),
+                    xmlFile.getOrderElementValue(i, "date"),
+                    positions,
+                    xmlFile.getOrderElementValue(i, "currency"),
+                    xmlFile.getOrderElementValue(i, "sale_point_order_num"));
+            if (OrderFileValidator.validateOrder(fileName, order)) {
+                order = indicatorStamper.processOrder(order);
+                db.createOrder(order, fileName, 'N');
+            } else {
+                db.createOrder(order, fileName, 'Y');
+            }
+        }
     }
 }

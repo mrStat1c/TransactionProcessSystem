@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Класс для работы с XML - файлами с заказами
  */
-public class XMLParser {
+public class XMLFile {
 
     private Element rootNode;
 
@@ -19,7 +19,7 @@ public class XMLParser {
      * @throws IOException
      * @throws JDOMException
      */
-    public XMLParser(File xmlFile) throws IOException, JDOMException {
+    public XMLFile(File xmlFile) throws IOException, JDOMException {
         SAXBuilder saxBuilder = new SAXBuilder();
         InputStreamReader in = new InputStreamReader(new BufferedInputStream(new FileInputStream(xmlFile)), "Cp1251");
         org.jdom2.Document doc = saxBuilder.build(new InputSource(in));
