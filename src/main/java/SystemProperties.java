@@ -7,10 +7,10 @@ import java.util.Properties;
 /**
  * Класс, инкапсулирующий системные настройки
  */
-class systemProperties {
+class SystemProperties {
 
     private static Properties systemProperties = new Properties();
-    private static final Logger log = LogManager.getLogger(systemProperties.class.getName());
+    private static final Logger log = LogManager.getLogger(SystemProperties.class.getName());
 
     static {
         try {

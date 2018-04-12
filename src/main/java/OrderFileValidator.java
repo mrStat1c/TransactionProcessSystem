@@ -26,7 +26,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForFile(file.getName(), 100);
-            log.info("File " + file.getName() + " rejected with rejectCode 100");
             return false;
         }
     }
@@ -43,7 +42,7 @@ class OrderFileValidator {
             return false;
         }
         boolean orderDateIsCorrect = validateOrderDate(fileName, order);
-        boolean cardNumberIsCorrect = false;//карта существует и она корректна
+        boolean cardNumberIsCorrect = false;
         boolean salePointIsCorrect = validateSalePoint(fileName, order);
         boolean result = (orderDateIsCorrect && validateLateDispatch(fileName, order)) & salePointIsCorrect;
         if (!order.getCard().isEmpty()) {
@@ -53,7 +52,7 @@ class OrderFileValidator {
         if (orderDateIsCorrect && cardNumberIsCorrect){
             result &= validateCardStatus(fileName, order);
         }
-        result &= (validateCurrency(fileName, order) && salePointIsCorrect && validateForeignCurrency(fileName, order));
+        result &= (validateCurrency(fileName, order) && validateForeignCurrency(fileName, order));
         return result;
     }
 
@@ -71,7 +70,6 @@ class OrderFileValidator {
             calendar.setTime(dateFormat.parse(order.getDate()));
         } catch (ParseException e) {
             db.createRejectForOrder(fileName, order.getOrderNum(), 200, order.getDate());
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 200");
             return false;
         }
         return true;
@@ -84,15 +82,14 @@ class OrderFileValidator {
      * @throws SQLException
      */
     private static boolean validateLateDispatch(String fileName, Order order) throws ParseException, SQLException {
+        double secondCountInOneDay = 86400000;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date orderDate = dateFormat.parse(order.getDate());
-        double daysPassed = (new Date().getTime() - orderDate.getTime()) /
-                (double) (1000 * 60 * 60 * 24); //86400000 секунд в одном дне
+        double daysPassed = (new Date().getTime() - orderDate.getTime()) / secondCountInOneDay;
         if (daysPassed <= 3 || (db.lateDispatchAgreement(order) && daysPassed <= 7)) {
             return true;
         } else {
             db.createRejectForOrder(fileName, order.getOrderNum(), 201, order.getDate());
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 201");
             return false;
         }
     }
@@ -108,7 +105,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForOrder(fileName, order.getOrderNum(), 210, order.getSalePoint());
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 210");
             return false;
         }
     }
@@ -124,7 +120,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForOrder(fileName, order.getOrderNum(), 220, order.getCard());
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 220");
             return false;
         }
     }
@@ -141,7 +136,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForOrder(fileName, order.getOrderNum(), 221, cardStatus);
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 221");
             return false;
         }
     }
@@ -157,7 +151,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForOrder(fileName, order.getOrderNum(), 230, order.getCurrency());
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 230");
             return false;
         }
     }
@@ -174,7 +167,6 @@ class OrderFileValidator {
                 return true;
             } else {
                 db.createRejectForOrder(fileName, order.getOrderNum(), 231, order.getCurrency());
-                log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 231");
                 return false;
             }
         } else {
@@ -201,13 +193,11 @@ class OrderFileValidator {
         for(Map.Entry field: orderFields.entrySet()){
             if (field.getValue().equals("")){
                 db.createRejectForOrder(fileName, order.getOrderNum(), 240, field.getKey() + " is absent");
-                log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 240");
                 return false;
             }
         }
         if(order.getPositions().isEmpty()){
             db.createRejectForOrder(fileName, order.getOrderNum(), 240, "orderPositions are absent");
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 240");
             return false;
         }
         return true;
@@ -222,7 +212,6 @@ class OrderFileValidator {
     private static boolean validateOrderForDublication(String fileName, Order order) throws SQLException {
         if(db.orderExists(order)){
             db.createRejectForOrder(fileName, order.getOrderNum(), 250, "dublicate");
-            log.info("File " + fileName + ". Order " + order.getOrderNum() + " rejected with rejectCode 250");
             return false;
         } else {
             return true;
@@ -263,7 +252,6 @@ class OrderFileValidator {
             return true;
         } else {
             db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 300, orderPosition.getProduct());
-            log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 300");
             return false;
         }
     }
@@ -282,12 +270,10 @@ class OrderFileValidator {
                 return true;
             } else {
                 db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 310, orderPosition.getCount());
-                log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 310");
                 return false;
             }
         } catch (NumberFormatException e) {
             db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 310, orderPosition.getCount());
-            log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 310");
             return false;
         }
     }
@@ -301,18 +287,16 @@ class OrderFileValidator {
      */
     private static boolean validateProductPrice(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
         try {
-            if (Double.parseDouble(orderPosition.getCount()) > 0
+            if (Double.parseDouble(orderPosition.getPrice()) > 0
                     && orderPosition.getPrice().substring(
                             orderPosition.getPrice().indexOf(".")).length() == 2) {
                 return true;
             } else {
                 db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 311, orderPosition.getPrice());
-                log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 311");
                 return false;
             }
         } catch (NumberFormatException e) {
             db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 311, orderPosition.getPrice());
-            log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 311");
             return false;
         }
     }
@@ -334,7 +318,6 @@ class OrderFileValidator {
         for(Map.Entry field: orderPositionFields.entrySet()){
             if (field.getValue().equals("")){
                 db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 320, field.getKey() + " is absent");
-                log.info("File " + fileName + ". Order " + orderNum + ". OrderPosition " + orderPosition.getNumber() + " rejected with rejectCode 320");
                 return false;
             }
         }

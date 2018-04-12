@@ -1,16 +1,18 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Date;
 
 /**
  * Класс для работы с данными в бд Mysql
  */
 public class MySQLDb {
 
+    private static Logger log = LogManager.getLogger(MySQLDb.class.getName());
     private Statement statement = null;
     private ResultSet resultSet;
     /** Создание подключения к бд
@@ -20,10 +22,10 @@ public class MySQLDb {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             Connection connection = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
-                            systemProperties.get("db.server"),
-                            systemProperties.get("db.scheme"),
-                            systemProperties.get("db.user"),
-                            systemProperties.get("db.password")));
+                            SystemProperties.get("db.server"),
+                            SystemProperties.get("db.scheme"),
+                            SystemProperties.get("db.user"),
+                            SystemProperties.get("db.password")));
             statement = connection.createStatement();
         } catch (Exception e) {
             System.out.println("Ошибка при подключении к бд:\n" + e.getMessage());
@@ -320,6 +322,7 @@ public class MySQLDb {
                 rejectCode +
                 ");";
         statement.execute(query);
+        log.info("File " + fileName + " rejected with rejectCode " + rejectCode);
     }
 
 
@@ -344,6 +347,7 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
+        log.info("File " + fileName + ". Order " + orderNumber + " rejected with rejectCode " + rejectCode);
     }
 
     /** Создает запись об отклонении позиции заказа от обработки
@@ -369,6 +373,8 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
+        log.info("File " + fileName + ". Order " + orderNumber + ". OrderPosition " + orderPositionNumber
+                + " rejected with rejectCode " + rejectCode);
     }
 
     /** Проверяет наличие соглашения у торговой точки на позднее представление заказов на обработку

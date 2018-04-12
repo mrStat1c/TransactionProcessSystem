@@ -1,7 +1,6 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +23,11 @@ public class IndicatorStamper {
      */
     IndicatorStamper(MySQLDb db) {
         this.db = db;
-        this.alcoholInd = Boolean.parseBoolean(systemProperties.get("validator.alcohol"));
-        this.lotteryInd = Boolean.parseBoolean(systemProperties.get("validator.lottery"));
-        this.lotteryMinSum = Double.parseDouble(systemProperties.get("validator.lotteryMinSum"));
-        this.productLineInd = Boolean.parseBoolean(systemProperties.get("validator.productLine"));
-        this.productLineMinSum = Double.parseDouble(systemProperties.get("validator.productLineMinSum"));
+        this.alcoholInd = Boolean.parseBoolean(SystemProperties.get("validator.alcohol"));
+        this.lotteryInd = Boolean.parseBoolean(SystemProperties.get("validator.lottery"));
+        this.lotteryMinSum = Double.parseDouble(SystemProperties.get("validator.lotteryMinSum"));
+        this.productLineInd = Boolean.parseBoolean(SystemProperties.get("validator.productLine"));
+        this.productLineMinSum = Double.parseDouble(SystemProperties.get("validator.productLineMinSum"));
     }
 
     /**

@@ -11,24 +11,34 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
+/**
+ * Класс, который содержит методы для управления системой
+ */
 public class SystemManager {
 
     private static Logger log = LogManager.getLogger(SystemManager.class.getName());
     private static MySQLDb db = new MySQLDb();
 
-    private static Path inputPath = Paths.get(systemProperties.get("inputPath"));
-    private static Path completedPath = Paths.get(systemProperties.get("completedPath"));
-    private static Path failedPath = Paths.get(systemProperties.get("failedPath"));
-    private static Path dublicatePath = Paths.get(systemProperties.get("dublicatePath"));
-    private static Path rejectedPath = Paths.get(systemProperties.get("rejectedPath"));
+    private static Path inputPath = Paths.get(SystemProperties.get("inputPath"));
+    private static Path completedPath = Paths.get(SystemProperties.get("completedPath"));
+    private static Path failedPath = Paths.get(SystemProperties.get("failedPath"));
+    private static Path dublicatePath = Paths.get(SystemProperties.get("dublicatePath"));
+    private static Path rejectedPath = Paths.get(SystemProperties.get("rejectedPath"));
     private static IndicatorStamper indicatorStamper;
 
+    /** Возвращает список всех файлов, расположенных во входной директории
+     * @return список файлов
+     */
     public static List<File> findFiles() {
         log.info("File processing is starting.");
         File [] files = inputPath.toFile().listFiles();
         return files == null ? Collections.emptyList(): new ArrayList<>(Arrays.asList(files));
     }
 
+    /** Исключает файлы, отклоненные реджектами уровня File, и возвращает оставшиеся файлы
+     * @param files список файлов для валидации
+     * @return список файлов после валидации
+     */
     public static List<File> removeInvalidFiles(List<File> files) throws SQLException, IOException {
             for (int i = 0; i < files.size(); i++) {
                 if (!OrderFileValidator.validateFile(files.get(i))) {
@@ -42,6 +52,9 @@ public class SystemManager {
        return files;
     }
 
+    /** Выполняет обработку файлов с заказами
+     * @param files список файлов для обработки
+     */
     public static void startProcessing(List<File> files) throws SQLException, IOException, ParseException {
         log.info("File processing started.");
         indicatorStamper = new IndicatorStamper(db);
@@ -72,6 +85,10 @@ public class SystemManager {
         log.info("File processing finished.");
     }
 
+    /** Выполняет обработку заказов из xml файла
+     * @param xmlFile файл с заказами типа XMLFile
+     * @param fileName имя файла
+     */
     private static void processOrder(XMLFile xmlFile, String fileName) throws SQLException, ParseException {
         for (int i = 0; i < xmlFile.getOrderCount(); i++) {
             List<OrderPosition> positions = new ArrayList<>();
