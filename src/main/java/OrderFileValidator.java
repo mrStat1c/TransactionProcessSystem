@@ -182,15 +182,14 @@ class OrderFileValidator {
      * @throws SQLException
      */
     private static boolean validateOrderFieldExisting(String fileName, Order order) throws SQLException {
-        //TODO сделать через рефлексию
-        //Field[] orderFields = order.getClass().getDeclaredFields();
-        Map<String, String> orderFields = new HashMap<>();
-        orderFields.put("currency", order.getCurrency());
-        orderFields.put("date", order.getDate());
-        orderFields.put("orderNum", String.valueOf(order.getOrderNum()));
-        orderFields.put("salePoint", order.getSalePoint());
-        orderFields.put("salePointOrderNum", order.getSalePointOrderNum());
-        for(Map.Entry field: orderFields.entrySet()){
+        Map<String, String> requiredOrderFields = new HashMap<>();
+        requiredOrderFields.put("currency", order.getCurrency());
+        requiredOrderFields.put("date", order.getDate());
+        requiredOrderFields.put("orderNum", String.valueOf(order.getOrderNum()));
+        requiredOrderFields.put("salePoint", order.getSalePoint());
+        requiredOrderFields.put("salePointOrderNum", order.getSalePointOrderNum());
+
+        for(Map.Entry field: requiredOrderFields.entrySet()){
             if (field.getValue().equals("")){
                 db.createRejectForOrder(fileName, order.getOrderNum(), 240, field.getKey() + " is absent");
                 return false;
@@ -309,13 +308,12 @@ class OrderFileValidator {
      * @throws SQLException
      */
     private static boolean validateOrderPositionFieldExisting(String fileName, int orderNum, OrderPosition orderPosition) throws SQLException {
-        //TODO сделать через рефлексию
-        //Field[] orderFields = order.getClass().getDeclaredFields();
-        Map<String, String> orderPositionFields = new HashMap<>();
-        orderPositionFields.put("product", orderPosition.getProduct());
-        orderPositionFields.put("price", orderPosition.getPrice());
-        orderPositionFields.put("count", orderPosition.getCount());
-        for(Map.Entry field: orderPositionFields.entrySet()){
+        Map<String, String> requiredOrderPositionFields = new HashMap<>();
+        requiredOrderPositionFields.put("product", orderPosition.getProduct());
+        requiredOrderPositionFields.put("price", orderPosition.getPrice());
+        requiredOrderPositionFields.put("count", orderPosition.getCount());
+
+        for(Map.Entry field: requiredOrderPositionFields.entrySet()){
             if (field.getValue().equals("")){
                 db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 320, field.getKey() + " is absent");
                 return false;
