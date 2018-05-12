@@ -288,7 +288,7 @@ class OrderFileValidator {
         try {
             if (Double.parseDouble(orderPosition.getPrice()) > 0
                     && orderPosition.getPrice().substring(
-                            orderPosition.getPrice().indexOf(".")).length() == 2) {
+                            orderPosition.getPrice().indexOf(".") + 1).length() == 2) {
                 return true;
             } else {
                 db.createRejectForOrderPosition(fileName, orderNum, orderPosition.getNumber(), 311, orderPosition.getPrice());

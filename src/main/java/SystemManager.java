@@ -43,7 +43,7 @@ public class SystemManager {
             for (int i = 0; i < files.size(); i++) {
                 if (!OrderFileValidator.validateFile(files.get(i))) {
                     db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
-                    Files.move(inputPath.resolve(files.get(i).getName()), rejectedPath.resolve(files.get(i).getName()));
+//                    Files.move(inputPath.resolve(files.get(i).getName()), rejectedPath.resolve(files.get(i).getName()));
                     log.info("File " + files.get(i).getName() + " rejected.");
                     files.remove(i);
                     i--;
@@ -63,7 +63,7 @@ public class SystemManager {
             try {
                 if (db.fileExists(fileName)) {
                     db.createFile(fileName, OrderFileStatus.DUBLICATE);
-                    Files.move(inputPath.resolve(fileName), dublicatePath.resolve(fileName));
+//                    Files.move(inputPath.resolve(fileName), dublicatePath.resolve(fileName));
                     log.info("File " + fileName + " is dublicate.");
                 } else {
                     db.createFile(fileName, OrderFileStatus.PROCESSING);
@@ -72,13 +72,13 @@ public class SystemManager {
                         processOrder(xmlFile, fileName);
                     }
                     db.updateFileStatus(fileName, OrderFileStatus.OK);
-                    Files.move(inputPath.resolve(fileName), completedPath.resolve(fileName));
+//                    Files.move(inputPath.resolve(fileName), completedPath.resolve(fileName));
                     log.info("File " + fileName + " processed.");
                 }
             } catch (JDOMException e) {
                 log.warn("e.getMessage()");
                 db.updateFileStatus(fileName, OrderFileStatus.FAILED);
-                Files.move(inputPath.resolve(fileName), failedPath.resolve(fileName));
+//                Files.move(inputPath.resolve(fileName), failedPath.resolve(fileName));
                 log.info("File " + fileName + " didn't process.");
             }
         }
