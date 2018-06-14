@@ -1,0 +1,3 @@
+NAME ${spta.salePointName}
+COUNT ${spta.orderCount}
+SUM ${spta.orderTotalSum}

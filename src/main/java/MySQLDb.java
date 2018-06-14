@@ -15,7 +15,9 @@ public class MySQLDb {
     private static Logger log = LogManager.getLogger(MySQLDb.class.getName());
     private Statement statement = null;
     private ResultSet resultSet;
-    /** Создание подключения к бд
+
+    /**
+     * Создание подключения к бд
      */
     public MySQLDb() {
         try {
@@ -38,7 +40,9 @@ public class MySQLDb {
     }
 
 
-    /**Возвращает идентификатор торговой точки по ее названию
+    /**
+     * Возвращает идентификатор торговой точки по ее названию
+     *
      * @param salePointName Название торговой точки
      * @return Идентификатор торговой точки
      * @throws SQLException
@@ -48,13 +52,15 @@ public class MySQLDb {
         getResultSet(query);
         try {
             return resultSet.getInt("id");
-        } catch (SQLException e){
+        } catch (SQLException e) {
             //TODO придумать нормальную реализацию
             return 0;
         }
     }
 
-    /** Возвращает идентификатор карты по ее номеру
+    /**
+     * Возвращает идентификатор карты по ее номеру
+     *
      * @param cardNumber Номер карты
      * @return Идентификатор карты
      * @throws SQLException
@@ -64,13 +70,15 @@ public class MySQLDb {
         getResultSet(query);
         try {
             return resultSet.getInt("id");
-        } catch (SQLException e){
+        } catch (SQLException e) {
             //TODO придумать нормальные реализации (тег card отсутствует и карта не найдена)
             return 0;
         }
     }
 
-    /** Возвращает идентификатор продукта по его названию
+    /**
+     * Возвращает идентификатор продукта по его названию
+     *
      * @param productName Название продукта
      * @return Идентификатор продукта
      * @throws SQLException
@@ -81,7 +89,9 @@ public class MySQLDb {
         return resultSet.getInt("id");
     }
 
-    /** Возвращает название продуктовой линии продукта по названию продукта
+    /**
+     * Возвращает название продуктовой линии продукта по названию продукта
+     *
      * @param productName Название продукта
      * @return Название продуктовой линии
      * @throws SQLException
@@ -93,7 +103,9 @@ public class MySQLDb {
         return resultSet.getString("name");
     }
 
-    /** Возвращает идентификатор файла по его имени
+    /**
+     * Возвращает идентификатор файла по его имени
+     *
      * @param fileName Имя Файла
      * @return Идентификатор файла
      * @throws SQLException
@@ -105,7 +117,9 @@ public class MySQLDb {
     }
 
 
-    /** Проверяет, существует ли файл в бд по его имени
+    /**
+     * Проверяет, существует ли файл в бд по его имени
+     *
      * @param fileName Имя файла
      * @return true - файл существует<br> false - файл не существует
      * @throws SQLException
@@ -117,9 +131,11 @@ public class MySQLDb {
         return resultSet.getInt("x") != 0;
     }
 
-    /** Создает запись о файле в бд
+    /**
+     * Создает запись о файле в бд
+     *
      * @param fileName Имя файла
-     * @param status Статус файла
+     * @param status   Статус файла
      * @throws SQLException
      */
     public void createFile(String fileName, OrderFileStatus status) throws SQLException {
@@ -135,9 +151,11 @@ public class MySQLDb {
         statement.execute(query);
     }
 
-    /** Обновляет статус файла в бд
+    /**
+     * Обновляет статус файла в бд
+     *
      * @param fileName Имя файла
-     * @param status Новый статус файла
+     * @param status   Новый статус файла
      * @throws SQLException
      */
     public void updateFileStatus(String fileName, OrderFileStatus status) throws SQLException {
@@ -150,8 +168,10 @@ public class MySQLDb {
         statement.execute(query);
     }
 
-    /** Создает запись о заказе в бд
-     * @param order Заказ
+    /**
+     * Создает запись о заказе в бд
+     *
+     * @param order    Заказ
      * @param fileName Имя файла, в котором находится заказ
      * @param rejected true - Заказ отклонен, false - Заказ обработан без ошибок
      * @throws SQLException
@@ -201,7 +221,9 @@ public class MySQLDb {
     }
 
 
-    /** Проверяет, существует ли заказ в бд
+    /**
+     * Проверяет, существует ли заказ в бд
+     *
      * @param order Заказ
      * @return true - Заказ существует в бд<br> false - Заказ не существует в бд
      * @throws SQLException
@@ -222,7 +244,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Возвращает идентификатор курса валюты по коду валюты
+    /**
+     * Возвращает идентификатор курса валюты по коду валюты
+     *
      * @param currencyСode Код валюты
      * @return Идентификатор валюты
      * @throws SQLException
@@ -232,18 +256,20 @@ public class MySQLDb {
         getResultSet(query);
         try {
             return resultSet.getInt("id");
-        } catch (SQLException e){
+        } catch (SQLException e) {
             //TODO придумать нормальную реализацию
             return 0;
         }
     }
 
-    /** Создает запись в бд о позиции в заказе
+    /**
+     * Создает запись в бд о позиции в заказе
+     *
      * @param orderPosition Позиция в заказе
-     * @param orderId Идентификатор заказа в бд
-     * @param currencyCode Код валюты заказа
-     * @param orderDate Дата заказа
-     * @param rejected true - Позиция заказа отклонена, false - Позиция заказа обработана без ошибок
+     * @param orderId       Идентификатор заказа в бд
+     * @param currencyCode  Код валюты заказа
+     * @param orderDate     Дата заказа
+     * @param rejected      true - Позиция заказа отклонена, false - Позиция заказа обработана без ошибок
      * @throws SQLException
      */
     private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate, char rejected) throws SQLException {
@@ -266,9 +292,11 @@ public class MySQLDb {
     }
 
 
-    /** Возвращает курс валюты на конкретную дату
+    /**
+     * Возвращает курс валюты на конкретную дату
+     *
      * @param currencyCode Код валюты
-     * @param courseDate Дата, на которую необходимо определить курс
+     * @param courseDate   Дата, на которую необходимо определить курс
      * @return Курс валюты
      * @throws SQLException
      */
@@ -285,9 +313,11 @@ public class MySQLDb {
         return resultSet.getDouble("course");
     }
 
-    /** Создает записи в бд обо всех индикаторах заказа
+    /**
+     * Создает записи в бд обо всех индикаторах заказа
+     *
      * @param orderIndicators Индикаторы заказа
-     * @param orderId Идентификатор заказа в бд
+     * @param orderId         Идентификатор заказа в бд
      * @throws SQLException
      */
     private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
@@ -306,8 +336,10 @@ public class MySQLDb {
         });
     }
 
-    /** Создает запись об отклонении файла от обработки
-     * @param fileName Имя файла
+    /**
+     * Создает запись об отклонении файла от обработки
+     *
+     * @param fileName   Имя файла
      * @param rejectCode Код ошибки из-за которой файл отклоняется от обработки
      * @throws SQLException
      */
@@ -326,11 +358,13 @@ public class MySQLDb {
     }
 
 
-    /** Создает запись об отклонении заказа от обработки
-     * @param fileName Имя файла, в котором находится заказ
+    /**
+     * Создает запись об отклонении заказа от обработки
+     *
+     * @param fileName    Имя файла, в котором находится заказ
      * @param orderNumber Системный номер заказа
-     * @param rejectCode Код ошибки из-за которой заказ отклоняется от обработки
-     * @param fieldValue Значение поля из-за которого произошла ошибка
+     * @param rejectCode  Код ошибки из-за которой заказ отклоняется от обработки
+     * @param fieldValue  Значение поля из-за которого произошла ошибка
      * @throws SQLException
      */
     public void createRejectForOrder(String fileName, int orderNumber, int rejectCode, String fieldValue) throws SQLException {
@@ -350,12 +384,14 @@ public class MySQLDb {
         log.info("File " + fileName + ". Order " + orderNumber + " rejected with rejectCode " + rejectCode);
     }
 
-    /** Создает запись об отклонении позиции заказа от обработки
-     * @param fileName Имя файла, в котором находится заказ
-     * @param orderNumber Системный номер заказа, в котором находится позиция заказа
+    /**
+     * Создает запись об отклонении позиции заказа от обработки
+     *
+     * @param fileName            Имя файла, в котором находится заказ
+     * @param orderNumber         Системный номер заказа, в котором находится позиция заказа
      * @param orderPositionNumber Порядковый номер позиции в заказе
-     * @param rejectCode Код ошибки из-за которой позиция заказа отклоняется от обработки
-     * @param fieldValue Значение поля из-за которого произошла ошибка
+     * @param rejectCode          Код ошибки из-за которой позиция заказа отклоняется от обработки
+     * @param fieldValue          Значение поля из-за которого произошла ошибка
      * @throws SQLException
      */
     public void createRejectForOrderPosition(String fileName, int orderNumber, int orderPositionNumber, int rejectCode,
@@ -377,7 +413,9 @@ public class MySQLDb {
                 + " rejected with rejectCode " + rejectCode);
     }
 
-    /** Проверяет наличие соглашения у торговой точки на позднее представление заказов на обработку
+    /**
+     * Проверяет наличие соглашения у торговой точки на позднее представление заказов на обработку
+     *
      * @param order Заказ, в рамках которого происходит проверка
      * @return true - соглашение имеется<br> false - соглашение отсутствует
      * @throws SQLException
@@ -392,7 +430,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет наличие соглашения у торговой точки на представление заказов с иностранной валютой на обработку
+    /**
+     * Проверяет наличие соглашения у торговой точки на представление заказов с иностранной валютой на обработку
+     *
      * @param order Заказ, в рамках которого происходит проверка
      * @return true - соглашение имеется<br> false - соглашение отсутствует
      * @throws SQLException
@@ -407,7 +447,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет наличие соглашения у торговой точки на представление заказов с неизвестным продуктом на обработку
+    /**
+     * Проверяет наличие соглашения у торговой точки на представление заказов с неизвестным продуктом на обработку
+     *
      * @param salePoint Название торговой точки
      * @return true - соглашение имеется<br> false - соглашение отсутствует
      * @throws SQLException
@@ -422,7 +464,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет существование в бд торговой точки
+    /**
+     * Проверяет существование в бд торговой точки
+     *
      * @param salePoint Название торговой точки
      * @return true - торговая точка существует<br> false - торговая точка не существует
      * @throws SQLException
@@ -435,7 +479,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет существование в бд карты
+    /**
+     * Проверяет существование в бд карты
+     *
      * @param cardNumber Номер карты
      * @return true - карта существует<br> false - карта не существует
      * @throws SQLException
@@ -448,7 +494,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет существование в бд кода валюты
+    /**
+     * Проверяет существование в бд кода валюты
+     *
      * @param currencyCode Код валюты
      * @return true - код валюты существует<br> false - код валюты не существует
      * @throws SQLException
@@ -461,7 +509,9 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Проверяет существование в бд продукта
+    /**
+     * Проверяет существование в бд продукта
+     *
      * @param productName Название продукта
      * @return true - продукт существует<br> false - продукт не существует
      * @throws SQLException
@@ -474,9 +524,11 @@ public class MySQLDb {
         return resultSet.getInt("count") > 0;
     }
 
-    /** Возвращает статус карты на момент создания заказа
+    /**
+     * Возвращает статус карты на момент создания заказа
+     *
      * @param cardNumber Номер карты
-     * @param orderDate Дата заказа
+     * @param orderDate  Дата заказа
      * @return Статус карты
      * @throws SQLException
      * @throws ParseException
@@ -510,5 +562,15 @@ public class MySQLDb {
             }
         }
         return "undefinite";
+    }
+
+
+    public ResultSet getSalePointTotalAmountInfo() throws SQLException {
+        String query = "SELECT sp.name, count(*) count, SUM(ord.sum) sum" +
+                " FROM orders ord" +
+                " JOIN sale_points sp on sp.id = ord.sale_point_id" +
+                " GROUP BY ord.sale_point_id";
+        getResultSet(query);
+        return resultSet;
     }
 }
