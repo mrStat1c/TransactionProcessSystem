@@ -4,7 +4,6 @@ import org.jdom2.JDOMException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -118,6 +117,6 @@ public class SystemManager {
 
     /** Выполняет выгрузку отчетов*/
     public static void startUnloading() throws IOException, SQLException {
-        ReportCreator.createSPTAReport();
+        ReportCreator.createReportSPTA();
     }
 }

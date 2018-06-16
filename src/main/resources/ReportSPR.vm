@@ -1,0 +1,22 @@
+            SPR Report
+
+#foreach ($x in $spr)
+ТОРГОВАЯ ТОЧКА ${x.salePointName}
+
+ОШИБКИ ЗАКАЗОВ
+#set($rejectCount=0)
+#foreach ($k in x.orderRejects.keySet)
+ОШИБКА $k - ${x.orderRejects.get($k)}
+$rejectCount++
+#end
+ВСЕГО      - $rejectCount
+
+
+ОШИБКИ ПОЗИЦИЙ ЗАКАЗОВ
+ОШИБКА ХХХ - ХХХ
+ОШИБКА ХХХ - ХХХ
+ОШИБКА ХХХ - ХХХ
+ВСЕГО      - ХХХ
+
+ВСЕГО ОШИБОК - ХХХ
+#end

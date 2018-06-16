@@ -566,11 +566,22 @@ public class MySQLDb {
 
 
     public ResultSet getSalePointTotalAmountInfo() throws SQLException {
-        String query = "SELECT sp.name, count(*) count, SUM(ord.sum) sum" +
+        String query = "SELECT sp.name, COUNT(*) count, SUM(ord.sum) sum" +
                 " FROM orders ord" +
-                " JOIN sale_points sp on sp.id = ord.sale_point_id" +
+                " JOIN sale_points sp ON sp.id = ord.sale_point_id" +
                 " WHERE ord.rejected = 'N'" +
                 " GROUP BY ord.sale_point_id";
+        getResultSet(query);
+        return resultSet;
+    }
+
+    public ResultSet getSalePointRejectsInfo() throws SQLException {
+        String query = " SELECT sp.name, rej.code, COUNT(*) count" +
+                " FROM orders ord" +
+                " JOIN sale_points sp ON sp.id = ord.sale_point_id" +
+                " JOIN rejects rej ON rej.order_number = ord.number" +
+                " WHERE rej.type = 'ORDER'" +
+                " GROUP BY sp.name, rej.code";
         getResultSet(query);
         return resultSet;
     }
