@@ -20,7 +20,8 @@ public class Program {
             return;
         }
 
-        SystemManager.startProcessing(files);
+        SystemManager.startLoading(files);
+        SystemManager.startUnloading();
     }
 }
 

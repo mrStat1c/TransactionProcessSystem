@@ -1,3 +1,8 @@
-NAME ${spta.salePointName}
-COUNT ${spta.orderCount}
-SUM ${spta.orderTotalSum}
+            SPTA Report
+
+#foreach ($x in $spta)
+ТОРГОВАЯ ТОЧКА       ${x.salePointName}
+КОЛИЧЕСТВО ЗАКАЗОВ   ${x.orderCount}
+СУММА ЗАКАЗОВ        ${x.orderTotalSum}
+
+#end

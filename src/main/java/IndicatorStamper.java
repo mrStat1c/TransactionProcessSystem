@@ -39,7 +39,7 @@ public class IndicatorStamper {
             for (OrderPosition position : order.getPositions()) {
                 if (db.getProductLine(position.getProduct()).equals("ALCOHOL")) {
                     order.addIndicator(OrderIndicator.ALCOHOL);
-                    log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " + OrderIndicator.ALCOHOL);
+                    log.info("Order " + order.getSalePointOrderNum() + " is stamped with indicator " + OrderIndicator.ALCOHOL);
                     break;
                 }
             }

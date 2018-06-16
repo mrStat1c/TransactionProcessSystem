@@ -30,7 +30,7 @@ public class SystemManager {
      * @return список файлов
      */
     public static List<File> findFiles() {
-        log.info("File processing is starting.");
+        log.info("File search started");
         File [] files = inputPath.toFile().listFiles();
         return files == null ? Collections.emptyList(): new ArrayList<>(Arrays.asList(files));
     }
@@ -55,7 +55,7 @@ public class SystemManager {
     /** Выполняет обработку файлов с заказами
      * @param files список файлов для обработки
      */
-    public static void startProcessing(List<File> files) throws SQLException, IOException, ParseException {
+    public static void startLoading(List<File> files) throws SQLException, IOException, ParseException {
         log.info("File processing started.");
         indicatorStamper = new IndicatorStamper(db);
         for (File file : files) {
@@ -114,5 +114,10 @@ public class SystemManager {
                 db.createOrder(order, fileName, 'Y');
             }
         }
+    }
+
+    /** Выполняет выгрузку отчетов*/
+    public static void startUnloading() throws IOException, SQLException {
+        ReportCreator.createSPTAReport();
     }
 }

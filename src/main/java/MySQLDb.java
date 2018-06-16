@@ -569,6 +569,7 @@ public class MySQLDb {
         String query = "SELECT sp.name, count(*) count, SUM(ord.sum) sum" +
                 " FROM orders ord" +
                 " JOIN sale_points sp on sp.id = ord.sale_point_id" +
+                " WHERE ord.rejected = 'N'" +
                 " GROUP BY ord.sale_point_id";
         getResultSet(query);
         return resultSet;
