@@ -576,12 +576,11 @@ public class MySQLDb {
     }
 
     public ResultSet getSalePointRejectsInfo() throws SQLException {
-        String query = " SELECT sp.name, rej.code, COUNT(*) count" +
+        String query = " SELECT sp.name, rej.code, rej.type, COUNT(*) count" +
                 " FROM orders ord" +
                 " JOIN sale_points sp ON sp.id = ord.sale_point_id" +
                 " JOIN rejects rej ON rej.order_number = ord.number" +
-                " WHERE rej.type = 'ORDER'" +
-                " GROUP BY sp.name, rej.code";
+                " GROUP BY sp.name, rej.code, rej.type";
         getResultSet(query);
         return resultSet;
     }

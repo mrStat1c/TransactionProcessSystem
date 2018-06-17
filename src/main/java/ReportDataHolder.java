@@ -2,6 +2,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+
 public class ReportDataHolder {
 
     private static MySQLDb db = new MySQLDb();
@@ -9,7 +10,7 @@ public class ReportDataHolder {
     private static List<SalePointTotalAmountInfo> salePointsTotalAmountInfo = new ArrayList<>();
     private static List<SalePointRejectsInfo> salePointsRejectsInfo = new ArrayList<>();
 
-    public static List<SalePointTotalAmountInfo> getSalePointsTotalAmountInfo (){
+    public static List<SalePointTotalAmountInfo> getSalePointsTotalAmountInfo() {
         return salePointsTotalAmountInfo;
     }
 
@@ -18,8 +19,8 @@ public class ReportDataHolder {
     }
 
     public static void prepareSPTAReportData() throws SQLException {
-         resultSet = db.getSalePointTotalAmountInfo();
-        do{
+        resultSet = db.getSalePointTotalAmountInfo();
+        do {
             salePointsTotalAmountInfo.add(new SalePointTotalAmountInfo(
                     resultSet.getString("name"),
                     resultSet.getInt("count"),
@@ -30,31 +31,43 @@ public class ReportDataHolder {
 
 
     public static void prepareSPRReportData() throws SQLException {
-      resultSet = db.getSalePointRejectsInfo();
-//      Делаем Map<String name, Map<String code, int count>>
-        Map<String, Map<String, Integer>> tempMap = new HashMap<>();
+        resultSet = db.getSalePointRejectsInfo();
+        Map<String, Map<String, Integer>> orderRejectsInfo = new HashMap<>();
+        Map<String, Map<String, Integer>> orderPositionRejectsInfo = new HashMap<>();
         String salePointName, rejectCode;
         int rejectCount;
-        do{
+        Map<String, Integer> tempMap;
+
+        do {
             salePointName = resultSet.getString("name");
             rejectCode = resultSet.getString("code");
             rejectCount = resultSet.getInt("count");
-          if (tempMap.containsKey(salePointName)){
-              Map<String, Integer> rejectsMap = tempMap.get(salePointName);
-              rejectsMap.put(rejectCode, rejectCount);
-              tempMap.put(salePointName, rejectsMap);
-          } else {
-              tempMap.put(salePointName, Map.of(rejectCode, rejectCount));
-          }
-      } while (resultSet.next());
 
-//      Превращаем Map<String, Map> в List<RejectInfo>
-//        TODO не хватает второй Map с OrderPositions
-        for(String salePoint: tempMap.keySet()){
+            if (resultSet.getString("type").equals(RejectType.ORDER.toString())) {
+                tempMap = orderRejectsInfo.containsKey(salePointName) ?
+                        orderRejectsInfo.get(salePointName) : new HashMap<>();
+                tempMap.put(rejectCode, rejectCount);
+                orderRejectsInfo.put(salePointName, tempMap);
+            } else {
+                tempMap = orderPositionRejectsInfo.containsKey(salePointName) ?
+                        orderPositionRejectsInfo.get(salePointName) : new HashMap<>();
+                tempMap.put(rejectCode, rejectCount);
+                orderPositionRejectsInfo.put(salePointName, tempMap);
+            }
+        } while (resultSet.next());
+
+        Set<String> keySet = new HashSet<>();
+        keySet.addAll(orderRejectsInfo.keySet());
+        keySet.addAll(orderPositionRejectsInfo.keySet());
+        keySet.forEach(salePoint ->
             salePointsRejectsInfo.add(new SalePointRejectsInfo(
                     salePoint,
-                    tempMap.get(salePoint),
-                    new HashMap<>()));
-        }
+                    orderRejectsInfo.get(salePoint),
+                    orderPositionRejectsInfo.get(salePoint)))
+        );
     }
+
+//    public static void main(String[] args) throws SQLException {
+//        prepareSPRReportData();
+//    }
 }

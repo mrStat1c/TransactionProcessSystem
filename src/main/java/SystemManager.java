@@ -25,33 +25,39 @@ public class SystemManager {
     private static Path rejectedPath = Paths.get(SystemProperties.get("rejectedPath"));
     private static IndicatorStamper indicatorStamper;
 
-    /** Возвращает список всех файлов, расположенных во входной директории
+    /**
+     * Возвращает список всех файлов, расположенных во входной директории
+     *
      * @return список файлов
      */
     public static List<File> findFiles() {
         log.info("File search started");
-        File [] files = inputPath.toFile().listFiles();
-        return files == null ? Collections.emptyList(): new ArrayList<>(Arrays.asList(files));
+        File[] files = inputPath.toFile().listFiles();
+        return files == null ? Collections.emptyList() : new ArrayList<>(Arrays.asList(files));
     }
 
-    /** Исключает файлы, отклоненные реджектами уровня File, и возвращает оставшиеся файлы
+    /**
+     * Исключает файлы, отклоненные реджектами уровня File, и возвращает оставшиеся файлы
+     *
      * @param files список файлов для валидации
      * @return список файлов после валидации
      */
     public static List<File> removeInvalidFiles(List<File> files) throws SQLException, IOException {
-            for (int i = 0; i < files.size(); i++) {
-                if (!OrderFileValidator.validateFile(files.get(i))) {
-                    db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
+        for (int i = 0; i < files.size(); i++) {
+            if (!OrderFileValidator.validateFile(files.get(i))) {
+                db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
 //                    Files.move(inputPath.resolve(files.get(i).getName()), rejectedPath.resolve(files.get(i).getName()));
-                    log.info("File " + files.get(i).getName() + " rejected.");
-                    files.remove(i);
-                    i--;
-                }
+                log.info("File " + files.get(i).getName() + " rejected.");
+                files.remove(i);
+                i--;
             }
-       return files;
+        }
+        return files;
     }
 
-    /** Выполняет обработку файлов с заказами
+    /**
+     * Выполняет обработку файлов с заказами
+     *
      * @param files список файлов для обработки
      */
     public static void startLoading(List<File> files) throws SQLException, IOException, ParseException {
@@ -66,10 +72,7 @@ public class SystemManager {
                     log.info("File " + fileName + " is dublicate.");
                 } else {
                     db.createFile(fileName, OrderFileStatus.PROCESSING);
-                    XMLFile xmlFile = new XMLFile(file);
-                    for (int i = 0; i < xmlFile.getOrderCount(); i++) {
-                        processOrder(xmlFile, fileName);
-                    }
+                    processOrders(new XMLFile(file), fileName);
                     db.updateFileStatus(fileName, OrderFileStatus.OK);
 //                    Files.move(inputPath.resolve(fileName), completedPath.resolve(fileName));
                     log.info("File " + fileName + " processed.");
@@ -84,11 +87,13 @@ public class SystemManager {
         log.info("File processing finished.");
     }
 
-    /** Выполняет обработку заказов из xml файла
-     * @param xmlFile файл с заказами типа XMLFile
+    /**
+     * Выполняет обработку заказов из xml файла
+     *
+     * @param xmlFile  файл с заказами типа XMLFile
      * @param fileName имя файла
      */
-    private static void processOrder(XMLFile xmlFile, String fileName) throws SQLException, ParseException {
+    private static void processOrders(XMLFile xmlFile, String fileName) throws SQLException, ParseException {
         for (int i = 0; i < xmlFile.getOrderCount(); i++) {
             List<OrderPosition> positions = new ArrayList<>();
             for (int j = 0; j < xmlFile.getPositionCount(i); j++) {
@@ -115,7 +120,9 @@ public class SystemManager {
         }
     }
 
-    /** Выполняет выгрузку отчетов*/
+    /**
+     * Выполняет выгрузку отчетов
+     */
     public static void startUnloading() throws IOException, SQLException {
         ReportCreator.createReportSPTA();
     }
