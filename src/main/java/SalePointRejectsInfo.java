@@ -4,15 +4,15 @@ import java.util.Map;
 public class SalePointRejectsInfo {
 
     private String salePointName;
-    private Map<String, Integer> orderRejects = new HashMap<>();
-    private Map<String, Integer> orderPositionRejects = new HashMap<>();
+    private Map<String, Integer> orderRejects;
+    private Map<String, Integer> orderPositionRejects;
 
     public SalePointRejectsInfo(String salePointName,
                                 Map<String, Integer> orderRejects,
-                                Map<String, Integer> orderPositionRejectsRejects){
+                                Map<String, Integer> orderPositionRejects){
      this.salePointName = salePointName;
      this.orderRejects = orderRejects;
-     this.orderPositionRejects = orderPositionRejectsRejects;
+     this.orderPositionRejects = orderPositionRejects;
     }
 
     public String getSalePointName() {

@@ -1,22 +1,27 @@
             SPR Report
 
-#foreach ($x in $spr)
-ТОРГОВАЯ ТОЧКА ${x.salePointName}
+#foreach ($salePointData in $spr)
+ТОРГОВАЯ ТОЧКА $salePointData.salePointName
 
 ОШИБКИ ЗАКАЗОВ
-#set($rejectCount=0)
-#foreach ($k in x.orderRejects.keySet)
-ОШИБКА $k - ${x.orderRejects.get($k)}
-$rejectCount++
+#set($ordRejCount = 0)
+#set($rejData = $salePointData.orderRejects)
+#foreach ($rejCode in $rejData.keySet())
+ОШИБКА $rejCode - $rejData.get($rejCode)
+#set($ordRejCount = $ordRejCount + $rejData.get($rejCode))
 #end
-ВСЕГО      - $rejectCount
-
+ВСЕГО      - $ordRejCount
 
 ОШИБКИ ПОЗИЦИЙ ЗАКАЗОВ
-ОШИБКА ХХХ - ХХХ
-ОШИБКА ХХХ - ХХХ
-ОШИБКА ХХХ - ХХХ
-ВСЕГО      - ХХХ
+#set($ordPosRejCount = 0)
+#set($rejData = $salePointData.orderPositionRejects)
+#foreach ($rejCode in $rejData.keySet())
+ОШИБКА $rejCode - $rejData.get($rejCode)
+#set($ordPosRejCount = $ordPosRejCount + $rejData.get($rejCode))
+#end
+ВСЕГО      - $ordPosRejCount
 
-ВСЕГО ОШИБОК - ХХХ
+#set($allRejCount = $ordRejCount + $ordPosRejCount)
+ВСЕГО ОШИБОК - $allRejCount
+--------------------------
 #end
