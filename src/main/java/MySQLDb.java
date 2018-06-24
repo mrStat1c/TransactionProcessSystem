@@ -222,7 +222,7 @@ public class MySQLDb {
                 "'" + order.getSalePointOrderNum() + "'" +
                 ");";
         statement.execute(query);
-//        TODO пересмотреть логику
+//        TODO пересмотреть логику (убрать индикаторы из класса Order и создавать индикаторы только на основе данных в бд этого чека)
         if (!validedOrderPositions.isEmpty()) {
             Order order1 = new Order(
                     order.getSalePoint(),
