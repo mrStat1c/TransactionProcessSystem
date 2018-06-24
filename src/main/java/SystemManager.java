@@ -112,7 +112,6 @@ public class SystemManager {
                     xmlFile.getOrderElementValue(i, "currency"),
                     xmlFile.getOrderElementValue(i, "sale_point_order_num"));
             if (OrderFileValidator.validateOrder(fileName, order)) {
-                order = indicatorStamper.processOrder(order);
                 db.createOrder(order, fileName, 'N');
             } else {
                 db.createOrder(order, fileName, 'Y');
@@ -125,5 +124,6 @@ public class SystemManager {
      */
     public static void startUnloading() throws IOException, SQLException {
         ReportCreator.createReportSPTA();
+        ReportCreator.createReportSPR();
     }
 }

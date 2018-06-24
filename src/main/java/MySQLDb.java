@@ -83,10 +83,14 @@ public class MySQLDb {
      * @return Идентификатор продукта
      * @throws SQLException
      */
-    public int getProductId(String productName) throws SQLException {
+    public int getProductId(String productName) {
         String query = "SELECT id FROM test.products WHERE name = '" + productName + "'";
-        getResultSet(query);
-        return resultSet.getInt("id");
+        try {
+            getResultSet(query);
+            return resultSet.getInt("id");
+        } catch (SQLException e){
+            return 0;
+        }
     }
 
     /**
@@ -180,15 +184,18 @@ public class MySQLDb {
         StringBuilder sb;
         int orderNumber = order.getOrderNum();
         double orderSum = 0.0;
+        List<OrderPosition> validedOrderPositions = new ArrayList<>();
         if (String.valueOf(rejected).equals("N")) {
             for (OrderPosition position : order.getPositions()) {
                 if (OrderFileValidator.validateOrderPosition(fileName, order.getOrderNum(), order.getSalePoint(), position)) {
                     createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'N');
+                    validedOrderPositions.add(position);
                 } else {
                     createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'Y');
                 }
             }
-            sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions WHERE order_number ='")
+            sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions" +
+                    " WHERE rejected = 'N' and order_number ='")
                     .append(orderNumber).append("';");
             getResultSet(sb.toString());
             orderSum = resultSet.getDouble("order_sum");
@@ -215,9 +222,22 @@ public class MySQLDb {
                 "'" + order.getSalePointOrderNum() + "'" +
                 ");";
         statement.execute(query);
-        if (!order.getIndicators().isEmpty()) {
-            createOrderIndicators(order.getIndicators(), orderNumber);
+//        TODO пересмотреть логику
+        if (!validedOrderPositions.isEmpty()) {
+            Order order1 = new Order(
+                    order.getSalePoint(),
+                    order.getCard(),
+                    order.getDate(),
+                    validedOrderPositions,
+                    order.getCurrency(),
+                    order.getSalePointOrderNum()
+            );
+            order1 = new IndicatorStamper(this).processOrder(order1);
+            if (!order1.getIndicators().isEmpty()) {
+                createOrderIndicators(order1.getIndicators(), orderNumber);
+            }
         }
+
     }
 
 
