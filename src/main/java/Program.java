@@ -22,6 +22,7 @@ public class Program {
 
         SystemManager.startLoading(files);
         SystemManager.startUnloading();
+        LoyaltyModule.createBonusTxns();
     }
 }
 

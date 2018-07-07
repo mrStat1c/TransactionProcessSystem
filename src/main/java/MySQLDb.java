@@ -76,6 +76,18 @@ public class MySQLDb {
         }
     }
 
+
+    public String getCardType(String cardNumber) throws SQLException {
+        String query = "SELECT type FROM test.cards WHERE number = '" + cardNumber + "'";
+        getResultSet(query);
+        try {
+            return resultSet.getString("type");
+        } catch (SQLException e) {
+            //TODO придумать нормальные реализации (тег card отсутствует и карта не найдена)
+            return "0";
+        }
+    }
+
     /**
      * Возвращает идентификатор продукта по его названию
      *
@@ -603,5 +615,31 @@ public class MySQLDb {
                 " GROUP BY sp.name, rej.code, rej.type";
         getResultSet(query);
         return resultSet;
+    }
+
+    public ResultSet getBonusCardUseInfo() throws SQLException {
+        String query = "SELECT c.number card_number, c.type card_type, op.order_number, sum(op.count * op.settl_price) sum" +
+                " FROM test.order_positions op" +
+                " JOIN test.orders o ON op.order_number = o.number" +
+                " JOIN test.cards c ON o.card_id = c.id" +
+                " JOIN test.products p ON op.product_id = p.id" +
+                " JOIN test.product_lines pl ON p.product_line_id = pl.id" +
+                " WHERE op.rejected = 'N'" +
+                " AND pl.name != 'ALCOHOL'" +
+                " AND o.card_id IS NOT NULL" +
+                " HAVING sum > 0 ";
+        getResultSet(query);
+        return resultSet;
+    }
+
+    public void createLoyaltyTxn(String card, String cardType, int orderNumber, double settlSum, int bonusSum) throws SQLException {
+        String query = "INSERT INTO test.loyalty_txns(card, card_type, order_number, settl_sum, bonus_sum)" +
+                " VALUES (" +
+                "'" + card + "', " +
+                "'" + cardType + "', " +
+                orderNumber + ", " +
+                settlSum + ", " +
+                bonusSum + ")";
+        statement.execute(query);
     }
 }
