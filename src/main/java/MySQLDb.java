@@ -24,10 +24,11 @@ public class MySQLDb {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             Connection connection = DriverManager.getConnection(
                     String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
-                            SystemProperties.get("db.server"),
-                            SystemProperties.get("db.scheme"),
-                            SystemProperties.get("db.user"),
-                            SystemProperties.get("db.password")));
+                            SystemProperties.get("db.dictionaries.server"),
+                            SystemProperties.get("db.dictionaries.scheme"),
+                            SystemProperties.get("db.dictionaries.user"),
+                            SystemProperties.get("db.dictionaries.password")));
+            //Возможно, потребуется создавать еще один statement
             statement = connection.createStatement();
         } catch (Exception e) {
             System.out.println("Ошибка при подключении к бд:\n" + e.getMessage());
@@ -48,7 +49,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public int getSalePointId(String salePointName) throws SQLException {
-        String query = "SELECT id FROM test.sale_points WHERE name = '" + salePointName + "'";
+        String query = "SELECT id FROM dictionaries.sale_points WHERE name = '" + salePointName + "'";
         getResultSet(query);
         try {
             return resultSet.getInt("id");
@@ -66,7 +67,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public int getCardId(String cardNumber) throws SQLException {
-        String query = "SELECT id FROM test.cards WHERE number = '" + cardNumber + "'";
+        String query = "SELECT id FROM dictionaries.cards WHERE number = '" + cardNumber + "'";
         getResultSet(query);
         try {
             return resultSet.getInt("id");
@@ -76,27 +77,15 @@ public class MySQLDb {
         }
     }
 
-
-    public String getCardType(String cardNumber) throws SQLException {
-        String query = "SELECT type FROM test.cards WHERE number = '" + cardNumber + "'";
-        getResultSet(query);
-        try {
-            return resultSet.getString("type");
-        } catch (SQLException e) {
-            //TODO придумать нормальные реализации (тег card отсутствует и карта не найдена)
-            return "0";
-        }
-    }
-
+    
     /**
      * Возвращает идентификатор продукта по его названию
      *
      * @param productName Название продукта
      * @return Идентификатор продукта
-     * @throws SQLException
      */
     public int getProductId(String productName) {
-        String query = "SELECT id FROM test.products WHERE name = '" + productName + "'";
+        String query = "SELECT id FROM dictionaries.products WHERE name = '" + productName + "'";
         try {
             getResultSet(query);
             return resultSet.getInt("id");
@@ -113,8 +102,8 @@ public class MySQLDb {
      * @throws SQLException
      */
     public String getProductLine(String productName) throws SQLException {
-        String query = "SELECT name FROM test.product_lines WHERE id = " +
-                "(SELECT product_line_id FROM test.products WHERE name = '" + productName + "')";
+        String query = "SELECT name FROM dictionaries.product_lines WHERE id = " +
+                "(SELECT product_line_id FROM dictionaries.products WHERE name = '" + productName + "')";
         getResultSet(query);
         return resultSet.getString("name");
     }
@@ -127,7 +116,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public int getFileId(String fileName) throws SQLException {
-        String query = "SELECT file_id FROM test.files WHERE name = '" + fileName + "'";
+        String query = "SELECT file_id FROM processing.files WHERE name = '" + fileName + "'";
         getResultSet(query);
         return resultSet.getInt("file_id");
     }
@@ -141,7 +130,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean fileExists(String fileName) throws SQLException {
-        String query = "SELECT count(*) as x from test.files WHERE " +
+        String query = "SELECT count(*) as x from processing.files WHERE " +
                 "name = '" + fileName + "';";
         getResultSet(query);
         return resultSet.getInt("x") != 0;
@@ -156,7 +145,7 @@ public class MySQLDb {
      */
     public void createFile(String fileName, OrderFileStatus status) throws SQLException {
         int fileId = NumGenerator.generate(8);
-        String query = "INSERT INTO test.files (file_id, name, status)" +
+        String query = "INSERT INTO processing.files (file_id, name, status)" +
                 " VALUES (" +
                 "'" + fileId + "'" +
                 ", " +
@@ -175,7 +164,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public void updateFileStatus(String fileName, OrderFileStatus status) throws SQLException {
-        String query = "UPDATE test.files" +
+        String query = "UPDATE processing.files" +
                 " SET " +
                 "status = '" + status + "'" +
                 " WHERE " +
@@ -206,13 +195,13 @@ public class MySQLDb {
                     createOrderPosition(position, orderNumber, order.getCurrency(), order.getDate(), 'Y');
                 }
             }
-            sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM test.order_positions" +
+            sb = new StringBuilder("SELECT SUM(settl_price) AS order_sum FROM processing.order_positions" +
                     " WHERE rejected = 'N' and order_number ='")
                     .append(orderNumber).append("';");
             getResultSet(sb.toString());
             orderSum = resultSet.getDouble("order_sum");
         }
-        String query = "INSERT INTO test.orders (number, sale_point_id, order_date, card_id, " +
+        String query = "INSERT INTO processing.orders (number, sale_point_id, order_date, card_id, " +
                 "file_id, ccy_id, sum, rejected, sale_point_order_num)" +
                 " VALUES (" +
                 orderNumber +
@@ -261,7 +250,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     boolean orderExists(Order order) throws SQLException {
-        String query = "SELECT count(*) count FROM test.orders" +
+        String query = "SELECT count(*) count FROM processing.orders" +
                 " WHERE order_date = '" +
                 order.getDate() +
                 "'" +
@@ -284,7 +273,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     private int getCurrencyId(String currencyСode) throws SQLException {
-        String query = "SELECT id FROM test.currencies WHERE code = '" + currencyСode + "'";
+        String query = "SELECT id FROM dictionaries.currencies WHERE code = '" + currencyСode + "'";
         getResultSet(query);
         try {
             return resultSet.getInt("id");
@@ -306,7 +295,7 @@ public class MySQLDb {
      */
     private void createOrderPosition(OrderPosition orderPosition, int orderId, String currencyCode, String orderDate, char rejected) throws SQLException {
         Double settlPrice = getCurrencyCourse(currencyCode, orderDate) * Double.parseDouble(orderPosition.getPrice());
-        String query = "INSERT INTO test.order_positions (order_number, product_id, orig_price, settl_price, count, rejected)" +
+        String query = "INSERT INTO processing.order_positions (order_number, product_id, orig_price, settl_price, count, rejected)" +
                 " VALUES (" +
                 orderId +
                 ", " +
@@ -333,7 +322,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public Double getCurrencyCourse(String currencyCode, String courseDate) throws SQLException {
-        String query = "SELECT course FROM test.currency_courses" +
+        String query = "SELECT course FROM dictionaries.currency_courses" +
                 " WHERE ccy_id = '" +
                 getCurrencyId(currencyCode) +
                 "'" +
@@ -355,7 +344,7 @@ public class MySQLDb {
     private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
         orderIndicators.forEach(indicator ->
         {
-            StringBuilder query = new StringBuilder("INSERT INTO test.order_indicators (order_id, indicator)")
+            StringBuilder query = new StringBuilder("INSERT INTO processing.order_indicators (order_id, indicator)")
                     .append(" VALUES (")
                     .append(orderId)
                     .append(", ").append("'").append(indicator).append("'")
@@ -376,7 +365,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public void createRejectForFile(String fileName, int rejectCode) throws SQLException {
-        String query = "INSERT INTO test.rejects (file_name, order_number, order_position_number, " +
+        String query = "INSERT INTO processing.rejects (file_name, order_number, order_position_number, " +
                 "type, code)" +
                 " VALUES (" +
                 "'" + fileName + "'" +
@@ -400,7 +389,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public void createRejectForOrder(String fileName, int orderNumber, int rejectCode, String fieldValue) throws SQLException {
-        String query = "INSERT INTO test.rejects (file_name, order_number, order_position_number, " +
+        String query = "INSERT INTO processing.rejects (file_name, order_number, order_position_number, " +
                 "type, code, incorrect_field_value)" +
                 " VALUES (" +
                 "'" + fileName + "'" +
@@ -428,7 +417,7 @@ public class MySQLDb {
      */
     public void createRejectForOrderPosition(String fileName, int orderNumber, int orderPositionNumber, int rejectCode,
                                              String fieldValue) throws SQLException {
-        String query = "INSERT INTO test.rejects (file_name, order_number, order_position_number, " +
+        String query = "INSERT INTO processing.rejects (file_name, order_number, order_position_number, " +
                 "type, code, incorrect_field_value)" +
                 " VALUES (" +
                 "'" + fileName + "'" +
@@ -453,10 +442,10 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean lateDispatchAgreement(Order order) throws SQLException {
-        String query = "SELECT count(*) as count from test.sale_point_agreements" +
+        String query = "SELECT count(*) as count from dictionaries.sale_point_agreements" +
                 " WHERE type = 'LateDispatch'" +
                 " AND sale_point_id =" +
-                " (SELECT id FROM test.sale_points WHERE name = " +
+                " (SELECT id FROM dictionaries.sale_points WHERE name = " +
                 "'" + order.getSalePoint() + "');";
         getResultSet(query);
         return resultSet.getInt("count") > 0;
@@ -470,10 +459,10 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean foreignCurrencyAgreement(Order order) throws SQLException {
-        String query = "SELECT count(*) as count from test.sale_point_agreements" +
+        String query = "SELECT count(*) as count from dictionaries.sale_point_agreements" +
                 " WHERE type = 'ForeignCurrency'" +
                 " AND sale_point_id =" +
-                " (SELECT id FROM test.sale_points WHERE name = " +
+                " (SELECT id FROM dictionaries.sale_points WHERE name = " +
                 "'" + order.getSalePoint() + "');";
         getResultSet(query);
         return resultSet.getInt("count") > 0;
@@ -487,10 +476,10 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean newProductAgreement(String salePoint) throws SQLException {
-        String query = "SELECT count(*) as count from test.sale_point_agreements" +
+        String query = "SELECT count(*) as count from dictionaries.sale_point_agreements" +
                 " WHERE type = 'NewProduct'" +
                 " AND sale_point_id =" +
-                " (SELECT id FROM test.sale_points WHERE name = " +
+                " (SELECT id FROM dictionaries.sale_points WHERE name = " +
                 "'" + salePoint + "');";
         getResultSet(query);
         return resultSet.getInt("count") > 0;
@@ -504,7 +493,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean salePointExists(String salePoint) throws SQLException {
-        String query = "SELECT count(*) as count from test.sale_points" +
+        String query = "SELECT count(*) as count from dictionaries.sale_points" +
                 " WHERE name = " +
                 "'" + salePoint + "';";
         getResultSet(query);
@@ -519,7 +508,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean cardExists(String cardNumber) throws SQLException {
-        String query = "SELECT count(*) as count from test.cards" +
+        String query = "SELECT count(*) as count from dictionaries.cards" +
                 " WHERE number = " +
                 "'" + cardNumber + "';";
         getResultSet(query);
@@ -534,7 +523,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean currencyExists(String currencyCode) throws SQLException {
-        String query = "SELECT count(*) as count from test.currencies" +
+        String query = "SELECT count(*) as count from dictionaries.currencies" +
                 " WHERE code = " +
                 "'" + currencyCode + "';";
         getResultSet(query);
@@ -549,7 +538,7 @@ public class MySQLDb {
      * @throws SQLException
      */
     public boolean productExists(String productName) throws SQLException {
-        String query = "SELECT count(*) as count from test.products" +
+        String query = "SELECT count(*) as count from dictionaries.products" +
                 " WHERE name = " +
                 "'" + productName + "';";
         getResultSet(query);
@@ -566,9 +555,9 @@ public class MySQLDb {
      * @throws ParseException
      */
     public String getCardStatusForOrderDate(String cardNumber, String orderDate) throws SQLException, ParseException {
-        String query = "SELECT ch.begin_date date, cs.status status from test.cards c" +
-                " JOIN card_status_history ch on ch.card_id = c.id" +
-                " JOIN card_statuses cs on cs.id = ch.status_id" +
+        String query = "SELECT ch.begin_date date, cs.status status from dictionaries.cards c" +
+                " JOIN dictionaries.card_status_history ch on ch.card_id = c.id" +
+                " JOIN dictionaries.card_statuses cs on cs.id = ch.status_id" +
                 " WHERE c.number = " +
                 "'" + cardNumber + "'" +
                 " ORDER BY date;";
@@ -596,34 +585,36 @@ public class MySQLDb {
         return "undefinite";
     }
 
-
+    //Данные из разных схем
     public ResultSet getSalePointTotalAmountInfo() throws SQLException {
         String query = "SELECT sp.name, COUNT(*) count, SUM(ord.sum) sum" +
-                " FROM orders ord" +
-                " JOIN sale_points sp ON sp.id = ord.sale_point_id" +
+                " FROM processing.orders ord" +
+                " JOIN dictionaries.sale_points sp ON sp.id = ord.sale_point_id" +
                 " WHERE ord.rejected = 'N'" +
                 " GROUP BY ord.sale_point_id";
         getResultSet(query);
         return resultSet;
     }
-
+    
+    //Данные из разных схем
     public ResultSet getSalePointRejectsInfo() throws SQLException {
         String query = " SELECT sp.name, rej.code, rej.type, COUNT(*) count" +
-                " FROM orders ord" +
-                " JOIN sale_points sp ON sp.id = ord.sale_point_id" +
-                " JOIN rejects rej ON rej.order_number = ord.number" +
+                " FROM processing.orders ord" +
+                " JOIN dictionaries.sale_points sp ON sp.id = ord.sale_point_id" +
+                " JOIN processing.rejects rej ON rej.order_number = ord.number" +
                 " GROUP BY sp.name, rej.code, rej.type";
         getResultSet(query);
         return resultSet;
     }
 
+    //Данные из разных схем
     public ResultSet getBonusCardUseInfo() throws SQLException {
         String query = "SELECT c.number card_number, c.type card_type, op.order_number, sum(op.count * op.settl_price) sum" +
-                " FROM test.order_positions op" +
-                " JOIN test.orders o ON op.order_number = o.number" +
-                " JOIN test.cards c ON o.card_id = c.id" +
-                " JOIN test.products p ON op.product_id = p.id" +
-                " JOIN test.product_lines pl ON p.product_line_id = pl.id" +
+                " FROM processing.order_positions op" +
+                " JOIN processing.orders o ON op.order_number = o.number" +
+                " JOIN dictionaries.cards c ON o.card_id = c.id" +
+                " JOIN dictionaries.products p ON op.product_id = p.id" +
+                " JOIN dictionaries.product_lines pl ON p.product_line_id = pl.id" +
                 " WHERE op.rejected = 'N'" +
                 " AND pl.name != 'ALCOHOL'" +
                 " AND o.card_id IS NOT NULL" +
@@ -633,7 +624,7 @@ public class MySQLDb {
     }
 
     public void createLoyaltyTxn(String card, String cardType, int orderNumber, double settlSum, int bonusSum) throws SQLException {
-        String query = "INSERT INTO test.loyalty_txns(card, card_type, order_number, settl_sum, bonus_sum)" +
+        String query = "INSERT INTO processing.loyalty_txns(card, card_type, order_number, settl_sum, bonus_sum)" +
                 " VALUES (" +
                 "'" + card + "', " +
                 "'" + cardType + "', " +
