@@ -23,12 +23,10 @@ public class MySQLDb {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             Connection connection = DriverManager.getConnection(
-                    String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
+                    String.format("jdbc:mysql://%s?user=%s&password=%s",
                             SystemProperties.get("db.dictionaries.server"),
-                            SystemProperties.get("db.dictionaries.scheme"),
                             SystemProperties.get("db.dictionaries.user"),
                             SystemProperties.get("db.dictionaries.password")));
-            //Возможно, потребуется создавать еще один statement
             statement = connection.createStatement();
         } catch (Exception e) {
             System.out.println("Ошибка при подключении к бд:\n" + e.getMessage());
@@ -585,18 +583,19 @@ public class MySQLDb {
         return "undefinite";
     }
 
-    //Данные из разных схем
+
     public ResultSet getSalePointTotalAmountInfo() throws SQLException {
         String query = "SELECT sp.name, COUNT(*) count, SUM(ord.sum) sum" +
                 " FROM processing.orders ord" +
                 " JOIN dictionaries.sale_points sp ON sp.id = ord.sale_point_id" +
                 " WHERE ord.rejected = 'N'" +
-                " GROUP BY ord.sale_point_id";
+                " GROUP BY ord.sale_point_id" +
+                " HAVING sum > 0";
         getResultSet(query);
         return resultSet;
     }
     
-    //Данные из разных схем
+
     public ResultSet getSalePointRejectsInfo() throws SQLException {
         String query = " SELECT sp.name, rej.code, rej.type, COUNT(*) count" +
                 " FROM processing.orders ord" +
@@ -607,7 +606,7 @@ public class MySQLDb {
         return resultSet;
     }
 
-    //Данные из разных схем
+
     public ResultSet getBonusCardUseInfo() throws SQLException {
         String query = "SELECT c.number card_number, c.type card_type, op.order_number, sum(op.count * op.settl_price) sum" +
                 " FROM processing.order_positions op" +
