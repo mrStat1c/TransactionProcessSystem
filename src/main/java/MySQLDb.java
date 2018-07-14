@@ -336,15 +336,15 @@ public class MySQLDb {
      * Создает записи в бд обо всех индикаторах заказа
      *
      * @param orderIndicators Индикаторы заказа
-     * @param orderId         Идентификатор заказа в бд
+     * @param orderNumber         Идентификатор заказа в бд
      * @throws SQLException
      */
-    private void createOrderIndicators(Set<String> orderIndicators, int orderId) throws SQLException {
+    private void createOrderIndicators(Set<String> orderIndicators, int orderNumber) throws SQLException {
         orderIndicators.forEach(indicator ->
         {
-            StringBuilder query = new StringBuilder("INSERT INTO processing.order_indicators (order_id, indicator)")
+            StringBuilder query = new StringBuilder("INSERT INTO processing.order_indicators (order_number, indicator)")
                     .append(" VALUES (")
-                    .append(orderId)
+                    .append(orderNumber)
                     .append(", ").append("'").append(indicator).append("'")
                     .append(");");
             try {
