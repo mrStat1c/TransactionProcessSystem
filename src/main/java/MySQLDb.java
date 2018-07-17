@@ -114,9 +114,9 @@ public class MySQLDb {
      * @throws SQLException
      */
     public int getFileId(String fileName) throws SQLException {
-        String query = "SELECT file_id FROM processing.files WHERE name = '" + fileName + "'";
+        String query = "SELECT id FROM processing.files WHERE name = '" + fileName + "'";
         getResultSet(query);
-        return resultSet.getInt("file_id");
+        return resultSet.getInt("id");
     }
 
 
@@ -142,11 +142,8 @@ public class MySQLDb {
      * @throws SQLException
      */
     public void createFile(String fileName, OrderFileStatus status) throws SQLException {
-        int fileId = NumGenerator.generate(8);
-        String query = "INSERT INTO processing.files (file_id, name, status)" +
+        String query = "INSERT INTO processing.files (name, status)" +
                 " VALUES (" +
-                "'" + fileId + "'" +
-                ", " +
                 "'" + fileName + "'" +
                 ", " +
                 "'" + status + "'" +
@@ -210,7 +207,7 @@ public class MySQLDb {
                 ", " +
                 getCardId(order.getCard()) +
                 ", " +
-                "'" + getFileId(fileName) + "'" +
+                getFileId(fileName) +
                 ", " +
                 "'" + getCurrencyId(order.getCurrency()) + "'" +
                 ", " +
