@@ -1,6 +1,8 @@
-import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Инкапсулирует данные, необходимые для формирования SPR отчета
+ */
 public class SalePointRejectsInfo {
 
     private String salePointName;

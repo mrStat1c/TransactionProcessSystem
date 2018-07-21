@@ -120,9 +120,9 @@ public class SystemManager {
     }
 
     /**
-     * Выполняет выгрузку отчетов
+     * Формирует и выгружает отчеты
      */
-    public static void startUnloading() throws IOException, SQLException {
+    public static void startUnloading() {
         ReportCreator.createReportSPTA();
         ReportCreator.createReportSPR();
     }

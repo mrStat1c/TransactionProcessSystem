@@ -16,3 +16,10 @@ values  (1, 'file1', 123, null, 'ORDER', '100', 'XXX', '2018-10-05 12:12:12'),
 insert into test.orders(id, number, sale_point_id, order_date, record_date, card_id, file_id, ccy_id, sum, rejected, sale_point_order_num)
 values (1, 123, 163456, '2018-10-10 12:12:12', '2018-10-10 12:12:12', null, 1, 1, 100, 'Y', 123),
 	   (2, 345, 435211, '2018-10-10 12:12:12', '2018-10-10 12:12:12', null, 1, 1, 100, 'Y', 123);
+
+
+-- Обновление курсов на сегодняшний день
+
+update dictionaries.currency_courses c
+set c.date =  sysdate()
+where id in (3,4);

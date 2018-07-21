@@ -581,6 +581,12 @@ public class MySQLDb {
     }
 
 
+    /**
+     * Возвращает данные, необходимые для создания SPTA отчетов
+     *
+     * @return данные, агрегированные по имени торговой точки
+     * @throws SQLException
+     */
     public ResultSet getSalePointTotalAmountInfo() throws SQLException {
         String query = "SELECT sp.name, COUNT(*) count, SUM(ord.sum) sum" +
                 " FROM processing.orders ord" +
@@ -591,8 +597,13 @@ public class MySQLDb {
         getResultSet(query);
         return resultSet;
     }
-    
 
+    /**
+     * Возвращает данные, необходимые для создания SPR отчетов
+     *
+     * @return данные, агрегированные по имени торговой точки и коду реджекта
+     * @throws SQLException
+     */
     public ResultSet getSalePointRejectsInfo() throws SQLException {
         String query = " SELECT sp.name, rej.code, rej.type, COUNT(*) count" +
                 " FROM processing.orders ord" +
@@ -604,6 +615,13 @@ public class MySQLDb {
     }
 
 
+    /**
+     *
+     * Возвращает данные, необходимые для расчета и начисления бонусов по выполненным заказам
+     *
+     * @return данные, агрегированные по номеру карты и номеру заказа
+     * @throws SQLException
+     */
     public ResultSet getBonusCardUseInfo() throws SQLException {
         String query = "SELECT c.number card_number, c.type card_type, op.order_number, sum(op.count * op.settl_price) sum" +
                 " FROM processing.order_positions op" +
@@ -619,6 +637,15 @@ public class MySQLDb {
         return resultSet;
     }
 
+    /**
+     * Создает транзакцию с бонусами в рамках выполненного заказа
+     * @param card номер карты
+     * @param cardType тип карты
+     * @param orderNumber номер заказа
+     * @param settlSum сумма заказа
+     * @param bonusSum сумма начисляемых бонусов
+     * @throws SQLException
+     */
     public void createLoyaltyTxn(String card, String cardType, int orderNumber, double settlSum, int bonusSum) throws SQLException {
         String query = "INSERT INTO processing.loyalty_txns(card, card_type, order_number, settl_sum, bonus_sum)" +
                 " VALUES (" +

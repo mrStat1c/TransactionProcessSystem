@@ -3,10 +3,12 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 import java.io.*;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Properties;
 
+/**
+ * Создает отчеты
+ */
 public class ReportCreator {
 
 
@@ -26,7 +28,10 @@ public class ReportCreator {
         }
     }
 
-    public static void createReportSPTA() throws SQLException {
+    /**
+     * Создает и выгружает SPTA отчет
+     */
+    public static void createReportSPTA() {
 
         ReportDataHolder.prepareSPTAReportData();
 
@@ -40,7 +45,10 @@ public class ReportCreator {
 
     }
 
-    public static void createReportSPR() throws SQLException {
+    /**
+     * Создает и выгружает SPR отчет
+     */
+    public static void createReportSPR() {
 
         ReportDataHolder.prepareSPRReportData();
         velocityContext = new VelocityContext();
@@ -52,6 +60,9 @@ public class ReportCreator {
         generatePhysFile();
     }
 
+    /**
+     * Вспомогательные метод для создания физического файл отчета
+     */
     private static void generatePhysFile(){
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fullOutputPath))) {
             reportTemplate.merge(velocityContext, bufferedWriter);

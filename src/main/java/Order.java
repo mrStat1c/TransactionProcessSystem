@@ -46,14 +46,18 @@ public class Order {
 
     public Set<String> getIndicators(){return this.indicators;}
 
-    /** Добавляет к заказу
+    /**
+     * Добавляет к заказу индикатор
+     *
      * @param indicator Индикатор
      */
     public void addIndicator(OrderIndicator indicator){
         this.indicators.add(indicator.toString());
     }
 
-    /** Добавляет к заказу индикатор, имеющий подполе
+    /**
+     *  Добавляет к заказу индикатор, имеющий подполе
+     *
      * @param indicator Индикатор
      * @param subField Подполе
      */

@@ -1,3 +1,6 @@
+/**
+ * Инкапсулирует данные, необходимые для формирования SPTA отчета
+ */
 public class SalePointTotalAmountInfo {
 
     private String salePointName;

@@ -6,6 +6,9 @@ import java.sql.SQLException;
 import java.util.*;
 
 
+/**
+ * Подготавливает и хранит данные, необходимые для создания отчетов
+ */
 public class ReportDataHolder {
 
     private static Logger log = LogManager.getLogger(ReportDataHolder.class.getName());
@@ -22,6 +25,9 @@ public class ReportDataHolder {
         return salePointsRejectsInfo;
     }
 
+    /**
+     * Подготавливает данные, необходимые для SPTA отчета
+     */
     public static void prepareSPTAReportData() {
         try {
             resultSet = db.getSalePointTotalAmountInfo();
@@ -37,7 +43,9 @@ public class ReportDataHolder {
         }
     }
 
-
+    /**
+     * Подготавливает данные, необходимые для SPR отчета
+     */
     public static void prepareSPRReportData() {
         try {
             resultSet = db.getSalePointRejectsInfo();

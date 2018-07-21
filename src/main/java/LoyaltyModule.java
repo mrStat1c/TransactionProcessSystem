@@ -1,23 +1,31 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Класс для расчета и начисления бонусов за заказы
+ */
 public class LoyaltyModule {
 
     private static Logger log = LogManager.getLogger(LoyaltyModule.class.getName());
     private static MySQLDb db = new MySQLDb();
 
 
-    class OrderData{
+    /**
+     * Инкапсулирует данные по заказу, необходимые для начисления бонусов
+     */
+    class OrderData {
         private String cardNumber;
         private String cardType;
         private int orderNumber;
         private double sum;
 
-        OrderData(String cardNumber, String cardType, int orderNumber, double sum){
+        OrderData(String cardNumber, String cardType, int orderNumber, double sum) {
             this.cardNumber = cardNumber;
             this.cardType = cardType;
             this.orderNumber = orderNumber;
@@ -25,9 +33,12 @@ public class LoyaltyModule {
         }
     }
 
+    /**
+     * Создает транзакции с бонусами
+     */
     public void createBonusTxns() throws SQLException {
         List<OrderData> orderDataList = new ArrayList<>();
-        int bonusSum = 0;
+        int bonusPercent;
         ResultSet resultSet = db.getBonusCardUseInfo();
         do {
             orderDataList.add(new OrderData(
@@ -36,23 +47,33 @@ public class LoyaltyModule {
                     resultSet.getInt("order_number"),
                     resultSet.getDouble("sum")));
         } while (resultSet.next());
-        for(OrderData orderData: orderDataList){
+        for (OrderData orderData : orderDataList) {
             switch (orderData.cardType) {
-                case "Green": bonusSum = bonusSumCalculate(orderData.sum, 3); break;
-                case "Silver": bonusSum = bonusSumCalculate(orderData.sum, 5); break;
-                case "Gold": bonusSum = bonusSumCalculate(orderData.sum, 7); break;
-                default: log.error("Unknown cardType.");
+                case "Green": bonusPercent = 3; break;
+                case "Silver": bonusPercent = 5; break;
+                case "Gold": bonusPercent = 7; break;
+                default: {
+                    log.error("Unknown cardType.");
+                    continue;
+                }
             }
-            if (bonusSum > 0) {
-                db.createLoyaltyTxn(orderData.cardNumber,
-                        orderData.cardType,
-                        orderData.orderNumber,
-                        orderData.sum,
-                        bonusSum);
-            }
+            db.createLoyaltyTxn(
+                    orderData.cardNumber,
+                    orderData.cardType,
+                    orderData.orderNumber,
+                    orderData.sum,
+                    bonusSumCalculate(orderData.sum, bonusPercent)
+            );
         }
     }
 
+    /**
+     * Рассчитывает количество начисляемых бонусов
+     *
+     * @param sum     - сумма заказа
+     * @param percent - количество процентов бонусов от суммы заказа
+     * @return количество бонусов
+     */
     private static int bonusSumCalculate(double sum, int percent) {
         return (int) (sum * percent / 100);
     }
