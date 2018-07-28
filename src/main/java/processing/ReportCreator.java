@@ -1,8 +1,13 @@
+package processing;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Properties;
 
@@ -11,7 +16,7 @@ import java.util.Properties;
  */
 public class ReportCreator {
 
-
+    private static Logger log = LogManager.getLogger(ReportCreator.class.getName());
     private static String outputPath = SystemProperties.get("outputPath");
     private static String currentDate = LocalDate.now().toString();
     private static Properties velocityProperties = new Properties();
@@ -31,7 +36,7 @@ public class ReportCreator {
     /**
      * Создает и выгружает SPTA отчет
      */
-    public static void createReportSPTA() {
+    public static void createReportSPTA() throws IOException {
 
         ReportDataHolder.prepareSPTAReportData();
 
@@ -48,7 +53,7 @@ public class ReportCreator {
     /**
      * Создает и выгружает SPR отчет
      */
-    public static void createReportSPR() {
+    public static void createReportSPR() throws IOException {
 
         ReportDataHolder.prepareSPRReportData();
         velocityContext = new VelocityContext();
@@ -63,11 +68,10 @@ public class ReportCreator {
     /**
      * Вспомогательные метод для создания физического файл отчета
      */
-    private static void generatePhysFile(){
+    private static void generatePhysFile() throws IOException {
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fullOutputPath))) {
             reportTemplate.merge(velocityContext, bufferedWriter);
-        } catch (IOException e) {
-            e.printStackTrace();
+            log.info(Paths.get(fullOutputPath).getFileName() + " created.");
         }
     }
 }

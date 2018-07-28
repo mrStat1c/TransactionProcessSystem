@@ -1,3 +1,7 @@
+package processing;
+
+import model.Order;
+import model.OrderPosition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdom2.JDOMException;
@@ -30,8 +34,8 @@ public class SystemManager {
      *
      * @return список файлов
      */
-    public static List<File> findFiles() {
-        log.info("File search started");
+    private static List<File> findFiles() {
+        log.info("File search started.");
         File[] files = inputPath.toFile().listFiles();
         return files == null ? Collections.emptyList() : new ArrayList<>(Arrays.asList(files));
     }
@@ -42,7 +46,7 @@ public class SystemManager {
      * @param files список файлов для валидации
      * @return список файлов после валидации
      */
-    public static List<File> removeInvalidFiles(List<File> files) throws SQLException, IOException {
+    private static List<File> removeInvalidFiles(List<File> files) throws SQLException, IOException {
         for (int i = 0; i < files.size(); i++) {
             if (!OrderFileValidator.validateFile(files.get(i))) {
                 db.createFile(files.get(i).getName(), OrderFileStatus.REJECTED);
@@ -58,9 +62,15 @@ public class SystemManager {
     /**
      * Выполняет обработку файлов с заказами
      *
-     * @param files список файлов для обработки
      */
-    public static void startLoading(List<File> files) throws SQLException, IOException, ParseException {
+    public static void startLoading() throws SQLException, IOException, ParseException {
+
+        List<File> files = removeInvalidFiles(findFiles());
+        if (files.isEmpty()) {
+            log.warn("No files for processing.");
+            return;
+        }
+
         log.info("File processing started.");
         indicatorStamper = new IndicatorStamper(db);
         for (File file : files) {
@@ -90,7 +100,7 @@ public class SystemManager {
     /**
      * Выполняет обработку заказов из xml файла
      *
-     * @param xmlFile  файл с заказами типа XMLFile
+     * @param xmlFile  файл с заказами типа processing.XMLFile
      * @param fileName имя файла
      */
     private static void processOrders(XMLFile xmlFile, String fileName) throws SQLException, ParseException {
@@ -122,8 +132,16 @@ public class SystemManager {
     /**
      * Формирует и выгружает отчеты
      */
-    public static void startUnloading() {
+    public static void startUnloading() throws IOException {
         ReportCreator.createReportSPTA();
         ReportCreator.createReportSPR();
+    }
+
+    public static void clean() throws SQLException {
+        db.cleanProcessingData();
+    }
+
+    public static void sendDataToArchive() throws SQLException {
+        db.sendDataToArchive();
     }
 }

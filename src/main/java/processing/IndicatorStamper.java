@@ -1,3 +1,8 @@
+package processing;
+
+import model.Order;
+import model.OrderIndicator;
+import model.OrderPosition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -6,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Добавляет к Order индикаторы OrderIndicators
+ * Добавляет к model.Order индикаторы OrderIndicators
  */
 public class IndicatorStamper {
 
@@ -31,7 +36,7 @@ public class IndicatorStamper {
     }
 
     /**
-     * В зависимости от условий, добавляет к Order индикаторы OrderIndicators
+     * В зависимости от условий, добавляет к model.Order индикаторы OrderIndicators
      */
     public Order processOrder(Order order) throws SQLException {
         Double currencyCourse = db.getCurrencyCourse(order.getCurrency(), order.getDate());
@@ -39,7 +44,7 @@ public class IndicatorStamper {
             for (OrderPosition position : order.getPositions()) {
                 if (db.getProductLine(position.getProduct()).equals("ALCOHOL")) {
                     order.addIndicator(OrderIndicator.ALCOHOL);
-                    log.info("Order " + order.getSalePointOrderNum() + " is stamped with indicator " + OrderIndicator.ALCOHOL);
+                    log.info("model.Order " + order.getSalePointOrderNum() + " is stamped with indicator " + OrderIndicator.ALCOHOL);
                     break;
                 }
             }
@@ -52,7 +57,7 @@ public class IndicatorStamper {
             }
             if (orderSum >= lotteryMinSum){
                 order.addIndicator(OrderIndicator.LOTTERY);
-                log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " + OrderIndicator.LOTTERY);
+                log.info("model.Order" + order.getSalePointOrderNum() + "is stamped with indicator " + OrderIndicator.LOTTERY);
             }
         }
         if (productLineInd){
@@ -69,7 +74,7 @@ public class IndicatorStamper {
                     .filter(entry -> entry.getValue() >= productLineMinSum)
                     .forEach(entry -> {
                         order.addIndicator(OrderIndicator.PROD_LINE, ".".concat(entry.getKey()));
-                        log.info("Order" + order.getSalePointOrderNum() + "is stamped with indicator " +
+                        log.info("model.Order" + order.getSalePointOrderNum() + "is stamped with indicator " +
                                 OrderIndicator.PROD_LINE.toString().concat(".").concat(entry.getKey()));
                     });
         }

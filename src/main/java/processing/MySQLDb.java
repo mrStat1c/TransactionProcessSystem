@@ -1,3 +1,7 @@
+package processing;
+
+import model.Order;
+import model.OrderPosition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -218,7 +222,7 @@ public class MySQLDb {
                 "'" + order.getSalePointOrderNum() + "'" +
                 ");";
         statement.execute(query);
-//        TODO пересмотреть логику (убрать индикаторы из класса Order и создавать индикаторы только на основе данных в бд этого чека)
+//        TODO пересмотреть логику (убрать индикаторы из класса model.Order и создавать индикаторы только на основе данных в бд этого чека)
         if (!validedOrderPositions.isEmpty()) {
             Order order1 = new Order(
                     order.getSalePoint(),
@@ -397,7 +401,7 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
-        log.info("File " + fileName + ". Order " + orderNumber + " rejected with rejectCode " + rejectCode);
+        log.info("File " + fileName + ". model.Order " + orderNumber + " rejected with rejectCode " + rejectCode);
     }
 
     /**
@@ -425,7 +429,7 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
-        log.info("File " + fileName + ". Order " + orderNumber + ". OrderPosition " + orderPositionNumber
+        log.info("File " + fileName + ". model.Order " + orderNumber + ". model.OrderPosition " + orderPositionNumber
                 + " rejected with rejectCode " + rejectCode);
     }
 
@@ -626,12 +630,14 @@ public class MySQLDb {
         String query = "SELECT c.number card_number, c.type card_type, op.order_number, sum(op.count * op.settl_price) sum" +
                 " FROM processing.order_positions op" +
                 " JOIN processing.orders o ON op.order_number = o.number" +
+                " LEFT JOIN processing.loyalty_txns lt ON o.number = lt.order_number" +
                 " JOIN dictionaries.cards c ON o.card_id = c.id" +
                 " JOIN dictionaries.products p ON op.product_id = p.id" +
                 " JOIN dictionaries.product_lines pl ON p.product_line_id = pl.id" +
                 " WHERE op.rejected = 'N'" +
                 " AND pl.name != 'ALCOHOL'" +
                 " AND o.card_id IS NOT NULL" +
+                " AND lt.id IS NULL" +
                 " HAVING sum > 0 ";
         getResultSet(query);
         return resultSet;
@@ -654,6 +660,30 @@ public class MySQLDb {
                 orderNumber + ", " +
                 settlSum + ", " +
                 bonusSum + ")";
+        statement.execute(query);
+    }
+
+
+    public void createLogRecord(String command, String result, String error) throws SQLException {
+        String query = "INSERT INTO processing.command_log(command, result, error)" +
+                        " VALUES (" +
+                        "'" + command + "', " +
+                        "'" + result + "', ";
+        query = query.equals("") ? query + "null)" : query + "'" + error + "')";
+        statement.execute(query);
+
+    }
+
+    public void cleanProcessingData() throws SQLException {
+        String query = "DELETE FROM processing.orders;" +
+                " DELETE FROM processing.files;" +
+                " DELETE FROM processing.command_log;";
+        statement.execute(query);
+    }
+
+    public void sendDataToArchive() throws SQLException {
+        //TODO запрос на перенос данных в схему архива
+        String query = "";
         statement.execute(query);
     }
 }
