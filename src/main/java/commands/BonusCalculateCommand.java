@@ -9,22 +9,24 @@ public class BonusCalculateCommand implements Command {
     @Override
     public boolean run() {
         String commandName = "BonusCalculate";
+        boolean result = true;
+        String exceptionMsg = "";
         try {
             loyaltyModule.createBonusTxns();
         } catch (SQLException e) {
             log.error("An error occurred while executing the command " + commandName + ".\n" + e.getMessage());
-            try {
-                db.createLogRecord(commandName, "ERROR", e.getMessage());
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            return false;
+            result = false;
+            exceptionMsg = e.getMessage();
         }
         try {
-            db.createLogRecord(commandName, "OK", "");
+            db.createLogRecord(
+                    commandName,
+                    result ? "OK" : "ERROR",
+                    result ? "" : exceptionMsg
+            );
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return true;
+        return result;
     }
 }

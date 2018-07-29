@@ -682,8 +682,14 @@ public class MySQLDb {
     }
 
     public void sendDataToArchive() throws SQLException {
-        //TODO запрос на перенос данных в схему архива
-        String query = "";
+        String query = "INSERT INTO archive.orders (number, sale_point_id, order_date, card_id, ccy_id, sum)" +
+        " SELECT number, sale_point_id, order_date, card_id, ccy_id, sum  FROM processing.orders;" +
+        " INSERT INTO archive.order_positions (order_number, product_id, settl_price, count)" +
+        " SELECT order_number, product_id, settl_price, count FROM processing.order_positions;" +
+        " INSERT INTO archive.order_indicators (order_number, indicator)" +
+        " SELECT order_number, indicator FROM processing.order_indicators;" +
+        " INSERT INTO archive.loyalty_txns (card, order_number, bonus_sum)" +
+        " SELECT card, order_number, bonus_sum FROM processing.loyalty_txns;";
         statement.execute(query);
     }
 }

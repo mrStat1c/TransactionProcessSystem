@@ -8,17 +8,24 @@ public class CleanCommand implements Command {
     @Override
     public boolean run() {
         String commandName = "Clean";
+        boolean result = true;
+        String exceptionMsg = "";
         try {
             SystemManager.clean();
         } catch (SQLException e) {
             log.error("An error occurred while executing the command " + commandName + ".\n" + e.getMessage());
-            try {
-                db.createLogRecord(commandName, "ERROR", e.getMessage());
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-            return false;
+            result = false;
+            exceptionMsg = e.getMessage();
         }
-        return true;
+        try {
+            db.createLogRecord(
+                    commandName,
+                    result ? "OK" : "ERROR",
+                    result ? "" : exceptionMsg
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }
