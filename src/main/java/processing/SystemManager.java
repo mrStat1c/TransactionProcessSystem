@@ -1,7 +1,7 @@
 package processing;
 
-import model.Order;
-import model.OrderPosition;
+import orderModel.Order;
+import orderModel.OrderPosition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdom2.JDOMException;
@@ -116,7 +116,7 @@ public class SystemManager {
             }
             Order order = new Order(
                     xmlFile.getOrderElementValue(i, "sale_point"),
-                    xmlFile.getOrderElementValue(i, "card"),
+                    xmlFile.orderElementExists(i, "card") ? xmlFile.getOrderElementValue(i, "card") : "",
                     xmlFile.getOrderElementValue(i, "date"),
                     positions,
                     xmlFile.getOrderElementValue(i, "currency"),

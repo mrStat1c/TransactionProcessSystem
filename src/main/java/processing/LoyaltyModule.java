@@ -2,6 +2,7 @@ package processing;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import utils.NumGenerator;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,6 +60,9 @@ public class LoyaltyModule {
                     continue;
                 }
             }
+            if(winningOrder(orderData.orderNumber)){
+                bonusPercent *= 2;
+            }
             db.createLoyaltyTxn(
                     orderData.cardNumber,
                     orderData.cardType,
@@ -79,5 +83,16 @@ public class LoyaltyModule {
      */
     private static int bonusSumCalculate(double sum, int percent) {
         return (int) (sum * percent / 100);
+    }
+
+    private static boolean winningOrder(int orderNumber) throws SQLException {
+        ResultSet resultSet = db.getOrderIndicators(orderNumber);
+        do {
+            if(resultSet.getString("indicator").equals("LOTTERY")
+                    && NumGenerator.generate(1) == 9){
+                return true;
+            }
+        } while (resultSet.next());
+        return false;
     }
 }

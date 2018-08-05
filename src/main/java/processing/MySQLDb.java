@@ -1,7 +1,7 @@
 package processing;
 
-import model.Order;
-import model.OrderPosition;
+import orderModel.Order;
+import orderModel.OrderPosition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -222,7 +222,7 @@ public class MySQLDb {
                 "'" + order.getSalePointOrderNum() + "'" +
                 ");";
         statement.execute(query);
-//        TODO пересмотреть логику (убрать индикаторы из класса model.Order и создавать индикаторы только на основе данных в бд этого чека)
+//        TODO пересмотреть логику (убрать индикаторы из класса Order и создавать индикаторы только на основе данных в бд этого чека)
         if (!validedOrderPositions.isEmpty()) {
             Order order1 = new Order(
                     order.getSalePoint(),
@@ -401,7 +401,7 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
-        log.info("File " + fileName + ". model.Order " + orderNumber + " rejected with rejectCode " + rejectCode);
+        log.info("File " + fileName + ". Order " + orderNumber + " rejected with rejectCode " + rejectCode);
     }
 
     /**
@@ -429,7 +429,7 @@ public class MySQLDb {
                 "'" + fieldValue + "'" +
                 ");";
         statement.execute(query);
-        log.info("File " + fileName + ". model.Order " + orderNumber + ". model.OrderPosition " + orderPositionNumber
+        log.info("File " + fileName + ". Order " + orderNumber + ". OrderPosition " + orderPositionNumber
                 + " rejected with rejectCode " + rejectCode);
     }
 
@@ -691,5 +691,12 @@ public class MySQLDb {
         " INSERT INTO archive.loyalty_txns (card, order_number, bonus_sum)" +
         " SELECT card, order_number, bonus_sum FROM processing.loyalty_txns;";
         statement.execute(query);
+    }
+
+    public ResultSet getOrderIndicators(int orderNumber) throws SQLException {
+        String query = "SELECT indicator FROM processing.order_indicators" +
+                " WHERE order_number = " + orderNumber + ";";
+        getResultSet(query);
+        return resultSet;
     }
 }
