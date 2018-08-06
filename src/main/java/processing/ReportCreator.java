@@ -26,7 +26,7 @@ public class ReportCreator {
 
     static {
         try {
-            velocityProperties.load(new InputStreamReader(ReportCreator.class.getResourceAsStream("velocity.properties")));
+            velocityProperties.load(new InputStreamReader(ReportCreator.class.getResourceAsStream("/velocity.properties")));
             Velocity.init(velocityProperties);
         } catch (IOException e) {
             e.printStackTrace();

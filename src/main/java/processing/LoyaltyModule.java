@@ -43,6 +43,10 @@ public class LoyaltyModule {
         List<OrderData> orderDataList = new ArrayList<>();
         int bonusPercent;
         ResultSet resultSet = db.getBonusCardUseInfo();
+        if(resultSet.getRow()==0){
+            log.info("No data for Bonus Txns creating.");
+            return;
+        }
         do {
             orderDataList.add(new OrderData(
                     resultSet.getString("card_number"),
@@ -87,12 +91,14 @@ public class LoyaltyModule {
 
     private static boolean winningOrder(int orderNumber) throws SQLException {
         ResultSet resultSet = db.getOrderIndicators(orderNumber);
-        do {
-            if(resultSet.getString("indicator").equals("LOTTERY")
-                    && NumGenerator.generate(1) == 9){
-                return true;
-            }
-        } while (resultSet.next());
+        if (resultSet.getRow() > 0) {
+            do {
+                if (resultSet.getString("indicator").equals("LOTTERY")
+                        && NumGenerator.generate(1) != 9) {
+                    return true;
+                }
+            } while (resultSet.next());
+        }
         return false;
     }
 }
