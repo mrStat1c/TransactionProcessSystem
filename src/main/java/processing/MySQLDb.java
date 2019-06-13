@@ -29,7 +29,7 @@ public class MySQLDb {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             connection = DriverManager.getConnection(
-                    String.format("jdbc:mysql://%s?user=%s&password=%s",
+                    String.format("jdbc:mysql://%s/hw10?user=%s&password=%s",
                             SystemProperties.get("db.dictionaries.server"),
                             SystemProperties.get("db.dictionaries.user"),
                             SystemProperties.get("db.dictionaries.password")));
