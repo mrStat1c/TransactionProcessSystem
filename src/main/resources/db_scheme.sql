@@ -24,6 +24,32 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `processing` /*!40100 DEFAULT CHARACTER
 USE `processing`;
 
 --
+-- Table structure for table `command_log`
+--
+
+DROP TABLE IF EXISTS `command_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `command_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `command` varchar(45) NOT NULL,
+  `result` varchar(45) NOT NULL,
+  `error` varchar(300) DEFAULT NULL,
+  `record_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `command_log`
+--
+
+LOCK TABLES `command_log` WRITE;
+/*!40000 ALTER TABLE `command_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `command_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `files`
 --
 
@@ -36,7 +62,7 @@ CREATE TABLE `files` (
   `record_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,7 +90,7 @@ CREATE TABLE `loyalty_txns` (
   `settl_sum` decimal(10,2) NOT NULL,
   `bonus_sum` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,7 +142,7 @@ CREATE TABLE `order_positions` (
   `count` int(11) NOT NULL,
   `rejected` varchar(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,7 +176,7 @@ CREATE TABLE `orders` (
   PRIMARY KEY (`id`),
   KEY `file_fk` (`file_id`),
   CONSTRAINT `file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -201,7 +227,7 @@ CREATE TABLE `rejects` (
   `incorrect_field_value` varchar(45) DEFAULT NULL,
   `record_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -210,6 +236,7 @@ CREATE TABLE `rejects` (
 
 LOCK TABLES `rejects` WRITE;
 /*!40000 ALTER TABLE `rejects` DISABLE KEYS */;
+INSERT INTO `rejects` VALUES (1,'fileRej.xml',62293776,1,'ORDER_POSITION',300,'XXXXX','2018-08-04 07:21:10'),(2,'fileRej.xml',21494477,1,'ORDER_POSITION',300,'XXXXX','2018-08-04 07:26:48'),(3,'fileRej.xml',34792437,1,'ORDER_POSITION',300,'XXXXX','2018-08-04 07:30:03'),(4,'fileRej.xml',16215065,1,'ORDER_POSITION',300,'XXXXX','2018-08-04 07:31:10');
 /*!40000 ALTER TABLE `rejects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -355,7 +382,7 @@ CREATE TABLE `currency_courses` (
 
 LOCK TABLES `currency_courses` WRITE;
 /*!40000 ALTER TABLE `currency_courses` DISABLE KEYS */;
-INSERT INTO `currency_courses` VALUES (3,1,'2018-07-21',1.00),(4,2,'2018-07-21',69.69),(5,1,'2017-12-28',1.00),(6,1,'2018-05-12',1.00),(7,2,'2018-05-12',69.69);
+INSERT INTO `currency_courses` VALUES (3,1,'2018-08-04',1.00),(4,2,'2018-08-04',69.69),(5,1,'2017-12-28',1.00),(6,1,'2018-05-12',1.00),(7,2,'2018-05-12',69.69);
 /*!40000 ALTER TABLE `currency_courses` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -408,6 +435,33 @@ LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
 INSERT INTO `products` VALUES (0,'undefined',0),(1,'FDHG54',2),(2,'FKS63',1),(3,'DSG456',2),(4,'GFDG345',2);
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reject_info`
+--
+
+DROP TABLE IF EXISTS `reject_info`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `reject_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` int(11) NOT NULL,
+  `level` varchar(45) NOT NULL,
+  `description` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code_UNIQUE` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reject_info`
+--
+
+LOCK TABLES `reject_info` WRITE;
+/*!40000 ALTER TABLE `reject_info` DISABLE KEYS */;
+INSERT INTO `reject_info` VALUES (57,100,'file','Incorrect file name'),(58,200,'order','Incorrect format of element Date'),(59,201,'order','Check LateDispatch failed'),(60,210,'order','Sale point not found'),(61,220,'order','Card number not found'),(62,221,'order','Card had an incorrect status at the time of the operation'),(63,230,'order','Currency code not found'),(64,231,'order','Foreign currency is not allowed for this sale point'),(65,240,'order','Mandatory element of Order is missing'),(66,250,'order','Duplicate order'),(67,300,'order_position','Product not found'),(68,310,'order_position','Incorrect element Count'),(69,311,'order_position','Incorrect element Price'),(70,320,'order_position','Mandatory element of OrderPosition is missing');
+/*!40000 ALTER TABLE `reject_info` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -464,6 +518,129 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'dictionaries'
 --
+
+--
+-- Current Database: `archive`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `archive` /*!40100 DEFAULT CHARACTER SET latin1 */;
+
+USE `archive`;
+
+--
+-- Table structure for table `loyalty_txns`
+--
+
+DROP TABLE IF EXISTS `loyalty_txns`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `loyalty_txns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `card` varchar(16) NOT NULL,
+  `order_number` int(11) NOT NULL,
+  `bonus_sum` int(11) NOT NULL,
+  `record_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `loyalty_txns`
+--
+
+LOCK TABLES `loyalty_txns` WRITE;
+/*!40000 ALTER TABLE `loyalty_txns` DISABLE KEYS */;
+INSERT INTO `loyalty_txns` VALUES (1,'1234567890123456',20800354,13,'2018-08-06 20:25:35');
+/*!40000 ALTER TABLE `loyalty_txns` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `order_indicators`
+--
+
+DROP TABLE IF EXISTS `order_indicators`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_indicators` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_number` int(11) NOT NULL,
+  `indicator` varchar(45) NOT NULL,
+  `record_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `order_indicators`
+--
+
+LOCK TABLES `order_indicators` WRITE;
+/*!40000 ALTER TABLE `order_indicators` DISABLE KEYS */;
+/*!40000 ALTER TABLE `order_indicators` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `order_positions`
+--
+
+DROP TABLE IF EXISTS `order_positions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_positions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_number` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `settl_price` decimal(10,2) NOT NULL,
+  `count` int(11) NOT NULL,
+  `record_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `order_positions`
+--
+
+LOCK TABLES `order_positions` WRITE;
+/*!40000 ALTER TABLE `order_positions` DISABLE KEYS */;
+INSERT INTO `order_positions` VALUES (1,80996076,0,13.34,1,'2018-08-06 20:25:35'),(2,20800354,1,133.34,2,'2018-08-06 20:25:35');
+/*!40000 ALTER TABLE `order_positions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `orders`
+--
+
+DROP TABLE IF EXISTS `orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `orders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `number` int(11) NOT NULL,
+  `sale_point_id` int(11) NOT NULL,
+  `order_date` datetime NOT NULL,
+  `card_id` int(11) DEFAULT NULL,
+  `ccy_id` int(11) NOT NULL,
+  `sum` decimal(10,2) NOT NULL,
+  `record_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `number_UNIQUE` (`number`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `orders`
+--
+
+LOCK TABLES `orders` WRITE;
+/*!40000 ALTER TABLE `orders` DISABLE KEYS */;
+INSERT INTO `orders` VALUES (1,80996076,435211,'2018-08-04 13:13:13',7583,1,0.00,'2018-08-06 20:25:35'),(2,20800354,163456,'2018-08-04 13:13:13',4563,1,133.34,'2018-08-06 20:25:35');
+/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping routines for database 'archive'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -474,4 +651,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-21 18:37:07
+-- Dump completed on 2019-11-02 13:51:21
